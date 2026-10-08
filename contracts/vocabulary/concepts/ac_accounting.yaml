@@ -1,0 +1,28 @@
+area_code: ac
+concepts:
+  - name: Fiscal Period
+    grain: dimension
+    description: Kỳ báo cáo của một pháp nhân — FY hoặc Q1..Q4, có thể lệch năm dương lịch.
+    source_endpoints: [/balance-sheet-statement, /cash-flow-statement, /financial-reports-dates, /income-statement, /insider-trading/statistics, /owner-earnings, /ratios, /revenue-geographic-segmentation]
+  - name: Income Statement
+    grain: period_fact
+    description: Báo cáo kết quả kinh doanh một kỳ.
+    source_endpoints: [/income-statement]
+  - name: Balance Sheet Statement
+    grain: period_fact
+    description: Bảng cân đối kế toán tại thời điểm cuối kỳ.
+    source_endpoints: [/balance-sheet-statement]
+  - name: Cash Flow Statement
+    grain: period_fact
+    description: Báo cáo lưu chuyển tiền tệ một kỳ.
+    source_endpoints: [/cash-flow-statement]
+  - name: Revenue Segment Breakdown
+    grain: period_fact
+    description: Phân rã doanh thu theo khu vực địa lý do doanh nghiệp tự đặt tên.
+    source_endpoints: [/revenue-geographic-segmentation]
+  - name: Statement Line Item
+    grain: period_fact
+    description: >
+      Một dòng của báo cáo tài chính. Biểu diễn dạng dài hay rộng hoãn tới P8 (Q6);
+      grain đã xác định bất kể dạng nào.
+    source_endpoints: [/enterprise-values, /owner-earnings, /ratios]

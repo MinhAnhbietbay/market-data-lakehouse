@@ -1,0 +1,70 @@
+# .dockerignore ở repo root — dùng cho cả 3 platform images (api/web/worker)
+# mà Makefile `docker-build-platform` build với context = .. (root, từ 2026-09-26).
+# Mục tiêu: (1) giảm bytes gửi cho dockerd, (2) tránh `.env` lọt vào image,
+# (3) tránh nuốt __pycache__/node_modules kéo theo số lượng file khổng lồ.
+#
+# Không dùng `**` ở đây — .dockerignore khớp theo glob path, không phải
+# gitignore-style, và viết thủ công cho từng thư mục dễ audit hơn.
+
+# --- Python: cache, env, venv, egg-info ---------------------------------
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.venv
+.venv-*
+venv
+.tox
+.coverage
+.coverage.*
+htmlcov
+
+# --- Node / Next (apps/web) ---------------------------------------------
+node_modules
+.next
+out
+dist
+.npm
+.eslintcache
+
+# --- Secrets & env -------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# --- Build artefacts, runtime data --------------------------------------
+artifacts
+data
+*.log
+*.tgz
+*.tar.gz
+.ipynb_checkpoints
+.DS_Store
+
+# --- IDE / agent state ---------------------------------------------------
+.vscode
+.idea
+.cursor
+.claude
+.superpowers
+.agents
+AGENTS.md
+CLAUDE.md
+
+# --- VCS -----------------------------------------------------------------
+.git
+.gitignore
+.gitattributes
+
+# --- Docs/specs: image không cần ----------------------------------------
+docs
+*.md
+!apps/*/README.md
+!packages/*/README.md

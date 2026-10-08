@@ -1,0 +1,429 @@
+version: 1
+source_spec: docs/superpowers/specs/2026-08-10-concept-model-44-api-design.md
+mappings:
+  - {endpoint: /income-statement, field: date, concept: Income Statement, role: event_date, raw_name: period_end_date}
+  - {endpoint: /income-statement, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /income-statement, field: reportedCurrency, concept: Currency, role: reference, raw_name: reported_currency}
+  - {endpoint: /income-statement, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /income-statement, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /income-statement, field: acceptedDate, concept: SEC Filing, role: known_from_date, raw_name: accepted_date}
+  - {endpoint: /income-statement, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /income-statement, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /income-statement, field: revenue, concept: Income Statement, role: attribute, raw_name: revenue}
+  - {endpoint: /income-statement, field: costOfRevenue, concept: Income Statement, role: attribute, raw_name: cost_of_revenue}
+  - {endpoint: /income-statement, field: researchAndDevelopmentExpenses, concept: Income Statement, role: attribute, raw_name: research_and_development_expenses}
+  - {endpoint: /income-statement, field: generalAndAdministrativeExpenses, concept: Income Statement, role: attribute, raw_name: general_and_administrative_expenses}
+  - {endpoint: /income-statement, field: sellingAndMarketingExpenses, concept: Income Statement, role: attribute, raw_name: selling_and_marketing_expenses}
+  - {endpoint: /income-statement, field: sellingGeneralAndAdministrativeExpenses, concept: Income Statement, role: attribute, raw_name: selling_general_and_administrative_expenses}
+  - {endpoint: /income-statement, field: otherExpenses, concept: Income Statement, role: attribute, raw_name: other_expenses}
+  - {endpoint: /income-statement, field: interestIncome, concept: Income Statement, role: attribute, raw_name: interest_income}
+  - {endpoint: /income-statement, field: interestExpense, concept: Income Statement, role: attribute, raw_name: interest_expense}
+  - {endpoint: /income-statement, field: depreciationAndAmortization, concept: Income Statement, role: attribute, raw_name: depreciation_and_amortization}
+  - {endpoint: /income-statement, field: nonOperatingIncomeExcludingInterest, concept: Income Statement, role: attribute, raw_name: non_operating_income_excluding_interest}
+  - {endpoint: /income-statement, field: incomeBeforeTax, concept: Income Statement, role: attribute, raw_name: income_before_tax}
+  - {endpoint: /income-statement, field: incomeTaxExpense, concept: Income Statement, role: attribute, raw_name: income_tax_expense}
+  - {endpoint: /income-statement, field: netIncomeFromDiscontinuedOperations, concept: Income Statement, role: attribute, raw_name: net_income_from_discontinued_operations}
+  - {endpoint: /income-statement, field: otherAdjustmentsToNetIncome, concept: Income Statement, role: attribute, raw_name: other_adjustments_to_net_income}
+  - {endpoint: /income-statement, field: netIncome, concept: Income Statement, role: attribute, raw_name: net_income}
+  - {endpoint: /income-statement, field: netIncomeDeductions, concept: Income Statement, role: attribute, raw_name: net_income_deductions}
+  - {endpoint: /income-statement, field: weightedAverageShsOut, concept: Income Statement, role: attribute, raw_name: weighted_average_shs_out}
+  - {endpoint: /income-statement, field: weightedAverageShsOutDil, concept: Income Statement, role: attribute, raw_name: weighted_average_shs_out_dil}
+  - {endpoint: /balance-sheet-statement, field: date, concept: Balance Sheet Statement, role: event_date, raw_name: period_end_date}
+  - {endpoint: /balance-sheet-statement, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /balance-sheet-statement, field: reportedCurrency, concept: Currency, role: reference, raw_name: reported_currency}
+  - {endpoint: /balance-sheet-statement, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /balance-sheet-statement, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /balance-sheet-statement, field: acceptedDate, concept: SEC Filing, role: known_from_date, raw_name: accepted_date}
+  - {endpoint: /balance-sheet-statement, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /balance-sheet-statement, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /balance-sheet-statement, field: cashAndCashEquivalents, concept: Balance Sheet Statement, role: attribute, raw_name: cash_and_cash_equivalents}
+  - {endpoint: /balance-sheet-statement, field: shortTermInvestments, concept: Balance Sheet Statement, role: attribute, raw_name: short_term_investments}
+  - {endpoint: /balance-sheet-statement, field: netReceivables, concept: Balance Sheet Statement, role: attribute, raw_name: net_receivables}
+  - {endpoint: /balance-sheet-statement, field: accountsReceivables, concept: Balance Sheet Statement, role: attribute, raw_name: accounts_receivables}
+  - {endpoint: /balance-sheet-statement, field: otherReceivables, concept: Balance Sheet Statement, role: attribute, raw_name: other_receivables}
+  - {endpoint: /balance-sheet-statement, field: inventory, concept: Balance Sheet Statement, role: attribute, raw_name: inventory}
+  - {endpoint: /balance-sheet-statement, field: prepaids, concept: Balance Sheet Statement, role: attribute, raw_name: prepaids}
+  - {endpoint: /balance-sheet-statement, field: otherCurrentAssets, concept: Balance Sheet Statement, role: attribute, raw_name: other_current_assets}
+  - {endpoint: /balance-sheet-statement, field: propertyPlantEquipmentNet, concept: Balance Sheet Statement, role: attribute, raw_name: property_plant_equipment_net}
+  - {endpoint: /balance-sheet-statement, field: goodwill, concept: Balance Sheet Statement, role: attribute, raw_name: goodwill}
+  - {endpoint: /balance-sheet-statement, field: intangibleAssets, concept: Balance Sheet Statement, role: attribute, raw_name: intangible_assets}
+  - {endpoint: /balance-sheet-statement, field: longTermInvestments, concept: Balance Sheet Statement, role: attribute, raw_name: long_term_investments}
+  - {endpoint: /balance-sheet-statement, field: taxAssets, concept: Balance Sheet Statement, role: attribute, raw_name: tax_assets}
+  - {endpoint: /balance-sheet-statement, field: otherNonCurrentAssets, concept: Balance Sheet Statement, role: attribute, raw_name: other_non_current_assets}
+  - {endpoint: /balance-sheet-statement, field: otherAssets, concept: Balance Sheet Statement, role: attribute, raw_name: other_assets}
+  - {endpoint: /balance-sheet-statement, field: accountPayables, concept: Balance Sheet Statement, role: attribute, raw_name: account_payables}
+  - {endpoint: /balance-sheet-statement, field: otherPayables, concept: Balance Sheet Statement, role: attribute, raw_name: other_payables}
+  - {endpoint: /balance-sheet-statement, field: accruedExpenses, concept: Balance Sheet Statement, role: attribute, raw_name: accrued_expenses}
+  - {endpoint: /balance-sheet-statement, field: shortTermDebt, concept: Balance Sheet Statement, role: attribute, raw_name: short_term_debt}
+  - {endpoint: /balance-sheet-statement, field: capitalLeaseObligationsCurrent, concept: Balance Sheet Statement, role: attribute, raw_name: capital_lease_obligations_current}
+  - {endpoint: /balance-sheet-statement, field: taxPayables, concept: Balance Sheet Statement, role: attribute, raw_name: tax_payables}
+  - {endpoint: /balance-sheet-statement, field: deferredRevenue, concept: Balance Sheet Statement, role: attribute, raw_name: deferred_revenue}
+  - {endpoint: /balance-sheet-statement, field: otherCurrentLiabilities, concept: Balance Sheet Statement, role: attribute, raw_name: other_current_liabilities}
+  - {endpoint: /balance-sheet-statement, field: longTermDebt, concept: Balance Sheet Statement, role: attribute, raw_name: long_term_debt}
+  - {endpoint: /balance-sheet-statement, field: deferredRevenueNonCurrent, concept: Balance Sheet Statement, role: attribute, raw_name: deferred_revenue_non_current}
+  - {endpoint: /balance-sheet-statement, field: deferredTaxLiabilitiesNonCurrent, concept: Balance Sheet Statement, role: attribute, raw_name: deferred_tax_liabilities_non_current}
+  - {endpoint: /balance-sheet-statement, field: otherNonCurrentLiabilities, concept: Balance Sheet Statement, role: attribute, raw_name: other_non_current_liabilities}
+  - {endpoint: /balance-sheet-statement, field: otherLiabilities, concept: Balance Sheet Statement, role: attribute, raw_name: other_liabilities}
+  - {endpoint: /balance-sheet-statement, field: capitalLeaseObligations, concept: Balance Sheet Statement, role: attribute, raw_name: capital_lease_obligations}
+  - {endpoint: /balance-sheet-statement, field: treasuryStock, concept: Balance Sheet Statement, role: attribute, raw_name: treasury_stock}
+  - {endpoint: /balance-sheet-statement, field: preferredStock, concept: Balance Sheet Statement, role: attribute, raw_name: preferred_stock}
+  - {endpoint: /balance-sheet-statement, field: commonStock, concept: Balance Sheet Statement, role: attribute, raw_name: common_stock}
+  - {endpoint: /balance-sheet-statement, field: retainedEarnings, concept: Balance Sheet Statement, role: attribute, raw_name: retained_earnings}
+  - {endpoint: /balance-sheet-statement, field: additionalPaidInCapital, concept: Balance Sheet Statement, role: attribute, raw_name: additional_paid_in_capital}
+  - {endpoint: /balance-sheet-statement, field: accumulatedOtherComprehensiveIncomeLoss, concept: Balance Sheet Statement, role: attribute, raw_name: accumulated_other_comprehensive_income_loss}
+  - {endpoint: /balance-sheet-statement, field: otherTotalStockholdersEquity, concept: Balance Sheet Statement, role: attribute, raw_name: other_total_stockholders_equity}
+  - {endpoint: /balance-sheet-statement, field: minorityInterest, concept: Balance Sheet Statement, role: attribute, raw_name: minority_interest}
+  - {endpoint: /cash-flow-statement, field: date, concept: Cash Flow Statement, role: event_date, raw_name: period_end_date}
+  - {endpoint: /cash-flow-statement, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /cash-flow-statement, field: reportedCurrency, concept: Currency, role: reference, raw_name: reported_currency}
+  - {endpoint: /cash-flow-statement, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /cash-flow-statement, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /cash-flow-statement, field: acceptedDate, concept: SEC Filing, role: known_from_date, raw_name: accepted_date}
+  - {endpoint: /cash-flow-statement, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /cash-flow-statement, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /cash-flow-statement, field: netIncome, concept: Cash Flow Statement, role: attribute, raw_name: net_income_cash_flow}
+  - {endpoint: /cash-flow-statement, field: depreciationAndAmortization, concept: Cash Flow Statement, role: attribute, raw_name: depreciation_and_amortization_cash_flow}
+  - {endpoint: /cash-flow-statement, field: deferredIncomeTax, concept: Cash Flow Statement, role: attribute, raw_name: deferred_income_tax}
+  - {endpoint: /cash-flow-statement, field: stockBasedCompensation, concept: Cash Flow Statement, role: attribute, raw_name: stock_based_compensation}
+  - {endpoint: /cash-flow-statement, field: changeInWorkingCapital, concept: Cash Flow Statement, role: attribute, raw_name: change_in_working_capital}
+  - {endpoint: /cash-flow-statement, field: accountsReceivables, concept: Cash Flow Statement, role: attribute, raw_name: change_in_accounts_receivables}
+  - {endpoint: /cash-flow-statement, field: inventory, concept: Cash Flow Statement, role: attribute, raw_name: change_in_inventory}
+  - {endpoint: /cash-flow-statement, field: accountsPayables, concept: Cash Flow Statement, role: attribute, raw_name: accounts_payables}
+  - {endpoint: /cash-flow-statement, field: otherWorkingCapital, concept: Cash Flow Statement, role: attribute, raw_name: other_working_capital}
+  - {endpoint: /cash-flow-statement, field: otherNonCashItems, concept: Cash Flow Statement, role: attribute, raw_name: other_non_cash_items}
+  - {endpoint: /cash-flow-statement, field: investmentsInPropertyPlantAndEquipment, concept: Cash Flow Statement, role: attribute, raw_name: investments_in_property_plant_and_equipment}
+  - {endpoint: /cash-flow-statement, field: acquisitionsNet, concept: Cash Flow Statement, role: attribute, raw_name: acquisitions_net}
+  - {endpoint: /cash-flow-statement, field: purchasesOfInvestments, concept: Cash Flow Statement, role: attribute, raw_name: purchases_of_investments}
+  - {endpoint: /cash-flow-statement, field: salesMaturitiesOfInvestments, concept: Cash Flow Statement, role: attribute, raw_name: sales_maturities_of_investments}
+  - {endpoint: /cash-flow-statement, field: otherInvestingActivities, concept: Cash Flow Statement, role: attribute, raw_name: other_investing_activities}
+  - {endpoint: /cash-flow-statement, field: netCashProvidedByInvestingActivities, concept: Cash Flow Statement, role: attribute, raw_name: net_cash_provided_by_investing_activities}
+  - {endpoint: /cash-flow-statement, field: longTermNetDebtIssuance, concept: Cash Flow Statement, role: attribute, raw_name: long_term_net_debt_issuance}
+  - {endpoint: /cash-flow-statement, field: shortTermNetDebtIssuance, concept: Cash Flow Statement, role: attribute, raw_name: short_term_net_debt_issuance}
+  - {endpoint: /cash-flow-statement, field: commonStockIssuance, concept: Cash Flow Statement, role: attribute, raw_name: common_stock_issuance}
+  - {endpoint: /cash-flow-statement, field: commonStockRepurchased, concept: Cash Flow Statement, role: attribute, raw_name: common_stock_repurchased}
+  - {endpoint: /cash-flow-statement, field: netPreferredStockIssuance, concept: Cash Flow Statement, role: attribute, raw_name: net_preferred_stock_issuance}
+  - {endpoint: /cash-flow-statement, field: commonDividendsPaid, concept: Cash Flow Statement, role: attribute, raw_name: common_dividends_paid}
+  - {endpoint: /cash-flow-statement, field: preferredDividendsPaid, concept: Cash Flow Statement, role: attribute, raw_name: preferred_dividends_paid}
+  - {endpoint: /cash-flow-statement, field: otherFinancingActivities, concept: Cash Flow Statement, role: attribute, raw_name: other_financing_activities}
+  - {endpoint: /cash-flow-statement, field: netCashProvidedByFinancingActivities, concept: Cash Flow Statement, role: attribute, raw_name: net_cash_provided_by_financing_activities}
+  - {endpoint: /cash-flow-statement, field: effectOfForexChangesOnCash, concept: Cash Flow Statement, role: attribute, raw_name: effect_of_forex_changes_on_cash}
+  - {endpoint: /cash-flow-statement, field: cashAtBeginningOfPeriod, concept: Cash Flow Statement, role: attribute, raw_name: cash_at_beginning_of_period}
+  - {endpoint: /cash-flow-statement, field: operatingCashFlow, concept: Cash Flow Statement, role: attribute, raw_name: operating_cash_flow}
+  - {endpoint: /cash-flow-statement, field: capitalExpenditure, concept: Cash Flow Statement, role: attribute, raw_name: capital_expenditure}
+  - {endpoint: /cash-flow-statement, field: incomeTaxesPaid, concept: Cash Flow Statement, role: attribute, raw_name: income_taxes_paid}
+  - {endpoint: /cash-flow-statement, field: interestPaid, concept: Cash Flow Statement, role: attribute, raw_name: interest_paid}
+  - {endpoint: /revenue-geographic-segmentation, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /revenue-geographic-segmentation, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /revenue-geographic-segmentation, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /revenue-geographic-segmentation, field: reportedCurrency, concept: Currency, role: reference, raw_name: reported_currency}
+  - {endpoint: /revenue-geographic-segmentation, field: date, concept: Revenue Segment Breakdown, role: event_date, raw_name: period_end_date}
+  - {endpoint: /revenue-geographic-segmentation, field: data.Americas Segment, concept: Revenue Segment Breakdown, role: attribute, raw_name: data_americas_segment}
+  - {endpoint: /financial-reports-dates, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /financial-reports-dates, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /financial-reports-dates, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /financial-reports-dates, field: linkXlsx, concept: Financial Report Document, role: attribute, raw_name: link_xlsx}
+  - {endpoint: /financial-reports-dates, field: linkJson, concept: Financial Report Document, role: attribute, raw_name: link_json}
+  - {endpoint: /enterprise-values, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /enterprise-values, field: date, concept: Statement Line Item, role: event_date, raw_name: period_end_date}
+  - {endpoint: /enterprise-values, field: stockPrice, concept: Statement Line Item, role: attribute, raw_name: stock_price}
+  - {endpoint: /enterprise-values, field: numberOfShares, concept: Statement Line Item, role: attribute, raw_name: number_of_shares}
+  - {endpoint: /enterprise-values, field: minusCashAndCashEquivalents, concept: Statement Line Item, role: attribute, raw_name: minus_cash_and_cash_equivalents}
+  - {endpoint: /enterprise-values, field: addTotalDebt, concept: Statement Line Item, role: attribute, raw_name: add_total_debt}
+  - {endpoint: /owner-earnings, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /owner-earnings, field: reportedCurrency, concept: Currency, role: reference, raw_name: reported_currency}
+  - {endpoint: /owner-earnings, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /owner-earnings, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /owner-earnings, field: date, concept: Statement Line Item, role: event_date, raw_name: period_end_date}
+  - {endpoint: /owner-earnings, field: maintenanceCapex, concept: Statement Line Item, role: attribute, raw_name: maintenance_capex}
+  - {endpoint: /ratios, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /ratios, field: date, concept: Statement Line Item, role: event_date, raw_name: period_end_date}
+  - {endpoint: /ratios, field: fiscalYear, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /ratios, field: period, concept: Fiscal Period, role: identity, raw_name: period}
+  - {endpoint: /ratios, field: reportedCurrency, concept: Currency, role: reference, raw_name: reported_currency}
+  - {endpoint: /ratios, field: priceToFairValue, concept: Statement Line Item, role: attribute, raw_name: price_to_fair_value}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: date, concept: Daily Price Bar, role: event_date, raw_name: trade_date}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: adjOpen, concept: Daily Price Bar, role: attribute, raw_name: open}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: adjHigh, concept: Daily Price Bar, role: attribute, raw_name: high}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: adjLow, concept: Daily Price Bar, role: attribute, raw_name: low}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: adjClose, concept: Daily Price Bar, role: attribute, raw_name: close}
+  - {endpoint: /historical-price-eod/non-split-adjusted, field: volume, concept: Daily Price Bar, role: attribute, raw_name: volume}
+  - {endpoint: /historical-market-capitalization, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /historical-market-capitalization, field: date, concept: Market Cap Observation, role: event_date, raw_name: trade_date}
+  - {endpoint: /historical-market-capitalization, field: marketCap, concept: Market Cap Observation, role: attribute, raw_name: market_cap}
+  - {endpoint: /splits, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /splits, field: date, concept: Stock Split, role: event_date, raw_name: split_effective_date}
+  - {endpoint: /splits, field: numerator, concept: Stock Split, role: attribute, raw_name: numerator}
+  - {endpoint: /splits, field: denominator, concept: Stock Split, role: attribute, raw_name: denominator}
+  - {endpoint: /splits, field: splitType, concept: Stock Split, role: attribute, raw_name: split_type}
+  - {endpoint: /dividends, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /dividends, field: date, concept: Cash Dividend, role: event_date, raw_name: ex_dividend_date}
+  - {endpoint: /dividends, field: recordDate, concept: Cash Dividend, role: attribute, raw_name: record_date}
+  - {endpoint: /dividends, field: paymentDate, concept: Cash Dividend, role: attribute, raw_name: payment_date}
+  - {endpoint: /dividends, field: declarationDate, concept: Cash Dividend, role: attribute, raw_name: declaration_date}
+  - {endpoint: /dividends, field: dividend, concept: Cash Dividend, role: attribute, raw_name: dividend}
+  - {endpoint: /dividends, field: frequency, concept: Cash Dividend, role: attribute, raw_name: frequency}
+  - {endpoint: /earnings, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /earnings, field: date, concept: Earnings Announcement, role: event_date, raw_name: announcement_date}
+  - {endpoint: /earnings, field: epsActual, concept: Earnings Announcement, role: attribute, raw_name: eps_actual}
+  - {endpoint: /earnings, field: epsEstimated, concept: Earnings Announcement, role: attribute, raw_name: eps_estimated}
+  - {endpoint: /earnings, field: revenueActual, concept: Earnings Announcement, role: attribute, raw_name: revenue_actual}
+  - {endpoint: /earnings, field: revenueEstimated, concept: Earnings Announcement, role: attribute, raw_name: revenue_estimated}
+  - {endpoint: /earnings, field: lastUpdated, concept: Earnings Announcement, role: attribute, raw_name: last_updated}
+  - {endpoint: /mergers-acquisitions-search, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /mergers-acquisitions-search, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /mergers-acquisitions-search, field: targetedCik, concept: Identifier Scheme, role: identity, raw_name: targeted_cik}
+  - {endpoint: /mergers-acquisitions-search, field: targetedSymbol, concept: Listing, role: identity, raw_name: targeted_symbol}
+  - {endpoint: /mergers-acquisitions-search, field: transactionDate, concept: Merger Acquisition, role: event_date, raw_name: announcement_date}
+  - {endpoint: /mergers-acquisitions-search, field: acceptedDate, concept: SEC Filing, role: known_from_date, raw_name: accepted_date}
+  - {endpoint: /mergers-acquisitions-search, field: link, concept: SEC Filing, role: attribute, raw_name: filing_url}
+  - {endpoint: /delisted-companies, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /delisted-companies, field: exchange, concept: Exchange Venue, role: reference, raw_name: exchange_code}
+  - {endpoint: /delisted-companies, field: ipoDate, concept: Listing, role: event_date, raw_name: ipo_date}
+  - {endpoint: /delisted-companies, field: delistedDate, concept: Delisting Event, role: event_date, raw_name: delisted_date}
+  - {endpoint: /symbol-change, field: date, concept: Symbol Change Event, role: event_date, raw_name: change_effective_date}
+  - {endpoint: /symbol-change, field: oldSymbol, concept: Symbol Change Event, role: identity, raw_name: old_symbol}
+  - {endpoint: /symbol-change, field: newSymbol, concept: Symbol Change Event, role: identity, raw_name: new_symbol}
+  - {endpoint: /ipos-calendar, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /ipos-calendar, field: daa, concept: IPO Event, role: unknown, raw_name: daa_unknown}
+  - {endpoint: /ipos-calendar, field: exchange, concept: Exchange Venue, role: reference, raw_name: exchange_code}
+  - {endpoint: /ipos-disclosure, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /ipos-disclosure, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /ipos-disclosure, field: acceptedDate, concept: SEC Filing, role: known_from_date, raw_name: accepted_date}
+  - {endpoint: /ipos-disclosure, field: effectivenessDate, concept: IPO Event, role: event_date, raw_name: effectiveness_date}
+  - {endpoint: /ipos-disclosure, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /ipos-disclosure, field: form, concept: SEC Filing, role: attribute, raw_name: form}
+  - {endpoint: /ipos-disclosure, field: url, concept: SEC Filing, role: attribute, raw_name: filing_url}
+  - {endpoint: /economic-calendar, field: date, concept: Economic Data Release, role: event_date, raw_name: release_date}
+  - {endpoint: /economic-calendar, field: country, concept: Country, role: reference, raw_name: country_code}
+  - {endpoint: /economic-calendar, field: event, concept: Economic Data Release, role: attribute, raw_name: event}
+  - {endpoint: /economic-calendar, field: currency, concept: Currency, role: reference, raw_name: currency_code}
+  - {endpoint: /economic-calendar, field: previous, concept: Economic Data Release, role: attribute, raw_name: previous}
+  - {endpoint: /economic-calendar, field: estimate, concept: Economic Data Release, role: attribute, raw_name: estimate}
+  - {endpoint: /economic-calendar, field: actual, concept: Economic Data Release, role: attribute, raw_name: actual}
+  - {endpoint: /economic-calendar, field: impact, concept: Economic Data Release, role: attribute, raw_name: impact}
+  - {endpoint: /economic-calendar, field: unit, concept: Economic Data Release, role: attribute, raw_name: unit}
+  - {endpoint: /profile, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /profile, field: companyName, concept: Legal Entity, role: attribute, raw_name: company_name}
+  - {endpoint: /profile, field: currency, concept: Currency, role: reference, raw_name: currency_code}
+  - {endpoint: /profile, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /profile, field: isin, concept: Identifier Scheme, role: identity, raw_name: isin}
+  - {endpoint: /profile, field: cusip, concept: Identifier Scheme, role: identity, raw_name: cusip}
+  - {endpoint: /profile, field: exchange, concept: Exchange Venue, role: reference, raw_name: exchange_code}
+  - {endpoint: /profile, field: industry, concept: Industry, role: reference, raw_name: industry}
+  - {endpoint: /profile, field: website, concept: Legal Entity, role: attribute, raw_name: website}
+  - {endpoint: /profile, field: description, concept: Legal Entity, role: attribute, raw_name: description}
+  - {endpoint: /profile, field: ceo, concept: Legal Entity, role: attribute, raw_name: ceo}
+  - {endpoint: /profile, field: sector, concept: Sector, role: reference, raw_name: sector}
+  - {endpoint: /profile, field: country, concept: Legal Entity, role: reference, raw_name: country_code}
+  - {endpoint: /profile, field: fullTimeEmployees, concept: Legal Entity, role: attribute, raw_name: full_time_employees}
+  - {endpoint: /profile, field: phone, concept: Legal Entity, role: attribute, raw_name: phone}
+  - {endpoint: /profile, field: address, concept: Legal Entity, role: attribute, raw_name: address}
+  - {endpoint: /profile, field: city, concept: Legal Entity, role: attribute, raw_name: city}
+  - {endpoint: /profile, field: state, concept: Legal Entity, role: attribute, raw_name: state}
+  - {endpoint: /profile, field: zip, concept: Legal Entity, role: attribute, raw_name: zip}
+  - {endpoint: /profile, field: image, concept: Legal Entity, role: attribute, raw_name: image}
+  - {endpoint: /profile, field: ipoDate, concept: Listing, role: event_date, raw_name: ipo_date}
+  - {endpoint: /profile, field: defaultImage, concept: Legal Entity, role: attribute, raw_name: default_image}
+  - {endpoint: /profile, field: isEtf, concept: Security, role: attribute, raw_name: is_etf}
+  - {endpoint: /profile, field: isAdr, concept: Security, role: attribute, raw_name: is_adr}
+  - {endpoint: /profile, field: isFund, concept: Security, role: attribute, raw_name: is_fund}
+  - {endpoint: /sec-profile, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /sec-profile, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /sec-profile, field: registrantName, concept: Legal Entity, role: attribute, raw_name: registrant_name}
+  - {endpoint: /sec-profile, field: sicCode, concept: Industry Classification System, role: reference, raw_name: sic_code}
+  - {endpoint: /sec-profile, field: sicDescription, concept: Industry Classification System, role: reference, raw_name: sic_description}
+  - {endpoint: /sec-profile, field: sicGroup, concept: Industry Classification System, role: reference, raw_name: sic_group}
+  - {endpoint: /sec-profile, field: isin, concept: Identifier Scheme, role: identity, raw_name: isin}
+  - {endpoint: /sec-profile, field: businessAddress, concept: Legal Entity, role: attribute, raw_name: business_address}
+  - {endpoint: /sec-profile, field: mailingAddress, concept: Legal Entity, role: attribute, raw_name: mailing_address}
+  - {endpoint: /sec-profile, field: phoneNumber, concept: Legal Entity, role: attribute, raw_name: phone_number}
+  - {endpoint: /sec-profile, field: postalCode, concept: Legal Entity, role: attribute, raw_name: postal_code}
+  - {endpoint: /sec-profile, field: city, concept: Legal Entity, role: attribute, raw_name: city}
+  - {endpoint: /sec-profile, field: state, concept: Legal Entity, role: attribute, raw_name: state}
+  - {endpoint: /sec-profile, field: country, concept: Legal Entity, role: reference, raw_name: country_code}
+  - {endpoint: /sec-profile, field: description, concept: Legal Entity, role: attribute, raw_name: description}
+  - {endpoint: /sec-profile, field: ceo, concept: Legal Entity, role: attribute, raw_name: ceo}
+  - {endpoint: /sec-profile, field: website, concept: Legal Entity, role: attribute, raw_name: website}
+  - {endpoint: /sec-profile, field: exchange, concept: Exchange Venue, role: reference, raw_name: exchange_code}
+  - {endpoint: /sec-profile, field: stateLocation, concept: Legal Entity, role: attribute, raw_name: state_location}
+  - {endpoint: /sec-profile, field: stateOfIncorporation, concept: Legal Entity, role: attribute, raw_name: state_of_incorporation}
+  - {endpoint: /sec-profile, field: fiscalYearEnd, concept: Legal Entity, role: attribute, raw_name: fiscal_year_end}
+  - {endpoint: /sec-profile, field: ipoDate, concept: Listing, role: event_date, raw_name: ipo_date}
+  - {endpoint: /sec-profile, field: secFilingsUrl, concept: SEC Filing, role: attribute, raw_name: filing_url}
+  - {endpoint: /sec-profile, field: taxIdentificationNumber, concept: Identifier Scheme, role: identity, raw_name: tax_identification_number}
+  - {endpoint: /sec-profile, field: fiftyTwoWeekRange, concept: Legal Entity, role: attribute, raw_name: fifty_two_week_range}
+  - {endpoint: /sec-profile, field: isActive, concept: Legal Entity, role: unknown, raw_name: is_active_unknown}
+  - {endpoint: /sec-profile, field: assetType, concept: Legal Entity, role: attribute, raw_name: asset_type}
+  - {endpoint: /sec-profile, field: openFigiComposite, concept: Identifier Scheme, role: identity, raw_name: open_figi_composite}
+  - {endpoint: /sec-profile, field: priceCurrency, concept: Currency, role: reference, raw_name: price_currency}
+  - {endpoint: /sec-profile, field: marketSector, concept: Legal Entity, role: attribute, raw_name: market_sector}
+  - {endpoint: /sec-profile, field: securityType, concept: Security, role: attribute, raw_name: security_type}
+  - {endpoint: /sec-profile, field: isEtf, concept: Security, role: attribute, raw_name: is_etf}
+  - {endpoint: /sec-profile, field: isAdr, concept: Security, role: attribute, raw_name: is_adr}
+  - {endpoint: /sec-profile, field: isFund, concept: Security, role: attribute, raw_name: is_fund}
+  - {endpoint: /cik-list, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /cik-list, field: companyName, concept: Legal Entity, role: attribute, raw_name: company_name}
+  - {endpoint: /all-industry-classification, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /all-industry-classification, field: name, concept: Legal Entity, role: attribute, raw_name: entity_name}
+  - {endpoint: /all-industry-classification, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /all-industry-classification, field: sicCode, concept: Industry Classification System, role: reference, raw_name: sic_code}
+  - {endpoint: /all-industry-classification, field: industryTitle, concept: Industry Classification System, role: reference, raw_name: industry_title}
+  - {endpoint: /all-industry-classification, field: businessAddress, concept: Legal Entity, role: attribute, raw_name: business_address}
+  - {endpoint: /all-industry-classification, field: phoneNumber, concept: Legal Entity, role: attribute, raw_name: phone_number}
+  - {endpoint: /financial-statement-symbol-list, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /financial-statement-symbol-list, field: companyName, concept: Legal Entity, role: attribute, raw_name: company_name}
+  - {endpoint: /financial-statement-symbol-list, field: tradingCurrency, concept: Currency, role: reference, raw_name: trading_currency}
+  - {endpoint: /financial-statement-symbol-list, field: reportingCurrency, concept: Currency, role: reference, raw_name: reporting_currency}
+  - {endpoint: /available-sectors, field: sector, concept: Sector, role: identity, raw_name: sector}
+  - {endpoint: /available-industries, field: industry, concept: Industry, role: identity, raw_name: industry}
+  - {endpoint: /available-countries, field: country, concept: Country, role: identity, raw_name: country_code}
+  - {endpoint: /index-list, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /index-list, field: name, concept: Market Index, role: identity, raw_name: entity_name}
+  - {endpoint: /index-list, field: exchange, concept: Exchange Venue, role: reference, raw_name: exchange_code}
+  - {endpoint: /index-list, field: currency, concept: Currency, role: reference, raw_name: currency_code}
+  - {endpoint: /sp500-constituent, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /sp500-constituent, field: name, concept: Legal Entity, role: attribute, raw_name: entity_name}
+  - {endpoint: /sp500-constituent, field: sector, concept: Sector, role: reference, raw_name: sector}
+  - {endpoint: /sp500-constituent, field: subSector, concept: Index Membership, role: attribute, raw_name: sub_sector}
+  - {endpoint: /sp500-constituent, field: headQuarter, concept: Index Membership, role: attribute, raw_name: head_quarter}
+  - {endpoint: /sp500-constituent, field: dateFirstAdded, concept: Index Membership, role: attribute, raw_name: date_first_added}
+  - {endpoint: /sp500-constituent, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /sp500-constituent, field: founded, concept: Index Membership, role: attribute, raw_name: founded}
+  - {endpoint: /historical-sp500-constituent, field: dateAdded, concept: Index Membership, role: attribute, raw_name: date_added}
+  - {endpoint: /historical-sp500-constituent, field: addedSecurity, concept: Index Membership, role: attribute, raw_name: added_security}
+  - {endpoint: /historical-sp500-constituent, field: removedTicker, concept: Index Membership, role: attribute, raw_name: removed_ticker}
+  - {endpoint: /historical-sp500-constituent, field: removedSecurity, concept: Index Membership, role: attribute, raw_name: removed_security}
+  - {endpoint: /historical-sp500-constituent, field: date, concept: Index Membership, role: event_date, raw_name: membership_change_date}
+  - {endpoint: /historical-sp500-constituent, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /historical-sp500-constituent, field: reason, concept: Index Membership, role: attribute, raw_name: reason}
+  - {endpoint: /shares-float, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /shares-float, field: date, concept: Share Count Observation, role: event_date, raw_name: observation_date}
+  - {endpoint: /shares-float, field: floatShares, concept: Share Count Observation, role: attribute, raw_name: float_shares}
+  - {endpoint: /shares-float, field: outstandingShares, concept: Share Count Observation, role: attribute, raw_name: outstanding_shares}
+  - {endpoint: /historical-employee-count, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /historical-employee-count, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /historical-employee-count, field: acceptanceTime, concept: SEC Filing, role: known_from_date, raw_name: acceptance_time}
+  - {endpoint: /historical-employee-count, field: periodOfReport, concept: Workforce Observation, role: event_date, raw_name: period_end_date}
+  - {endpoint: /historical-employee-count, field: formType, concept: SEC Filing, role: attribute, raw_name: form_type}
+  - {endpoint: /historical-employee-count, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /historical-employee-count, field: employeeCount, concept: Workforce Observation, role: attribute, raw_name: employee_count}
+  - {endpoint: /historical-employee-count, field: source, concept: SEC Filing, role: attribute, raw_name: filing_url}
+  - {endpoint: /analyst-estimates, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /analyst-estimates, field: date, concept: Analyst Estimate, role: event_date, raw_name: estimate_period_end_date}
+  - {endpoint: /analyst-estimates, field: revenueLow, concept: Analyst Estimate, role: attribute, raw_name: revenue_low}
+  - {endpoint: /analyst-estimates, field: revenueHigh, concept: Analyst Estimate, role: attribute, raw_name: revenue_high}
+  - {endpoint: /analyst-estimates, field: revenueAvg, concept: Analyst Estimate, role: attribute, raw_name: revenue_avg}
+  - {endpoint: /analyst-estimates, field: ebitdaLow, concept: Analyst Estimate, role: attribute, raw_name: ebitda_low}
+  - {endpoint: /analyst-estimates, field: ebitdaHigh, concept: Analyst Estimate, role: attribute, raw_name: ebitda_high}
+  - {endpoint: /analyst-estimates, field: ebitdaAvg, concept: Analyst Estimate, role: attribute, raw_name: ebitda_avg}
+  - {endpoint: /analyst-estimates, field: ebitLow, concept: Analyst Estimate, role: attribute, raw_name: ebit_low}
+  - {endpoint: /analyst-estimates, field: ebitHigh, concept: Analyst Estimate, role: attribute, raw_name: ebit_high}
+  - {endpoint: /analyst-estimates, field: ebitAvg, concept: Analyst Estimate, role: attribute, raw_name: ebit_avg}
+  - {endpoint: /analyst-estimates, field: netIncomeLow, concept: Analyst Estimate, role: attribute, raw_name: net_income_low}
+  - {endpoint: /analyst-estimates, field: netIncomeHigh, concept: Analyst Estimate, role: attribute, raw_name: net_income_high}
+  - {endpoint: /analyst-estimates, field: netIncomeAvg, concept: Analyst Estimate, role: attribute, raw_name: net_income_avg}
+  - {endpoint: /analyst-estimates, field: sgaExpenseLow, concept: Analyst Estimate, role: attribute, raw_name: sga_expense_low}
+  - {endpoint: /analyst-estimates, field: sgaExpenseHigh, concept: Analyst Estimate, role: attribute, raw_name: sga_expense_high}
+  - {endpoint: /analyst-estimates, field: sgaExpenseAvg, concept: Analyst Estimate, role: attribute, raw_name: sga_expense_avg}
+  - {endpoint: /analyst-estimates, field: epsAvg, concept: Analyst Estimate, role: attribute, raw_name: eps_avg}
+  - {endpoint: /analyst-estimates, field: epsHigh, concept: Analyst Estimate, role: attribute, raw_name: eps_high}
+  - {endpoint: /analyst-estimates, field: epsLow, concept: Analyst Estimate, role: attribute, raw_name: eps_low}
+  - {endpoint: /analyst-estimates, field: numAnalystsRevenue, concept: Analyst Estimate, role: attribute, raw_name: num_analysts_revenue}
+  - {endpoint: /analyst-estimates, field: numAnalystsEps, concept: Analyst Estimate, role: attribute, raw_name: num_analysts_eps}
+  - {endpoint: /grades, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /grades, field: date, concept: Analyst Recommendation, role: event_date, raw_name: grade_date}
+  - {endpoint: /grades, field: gradingCompany, concept: Research Firm, role: reference, raw_name: grading_company}
+  - {endpoint: /grades, field: previousGrade, concept: Analyst Recommendation, role: attribute, raw_name: previous_grade}
+  - {endpoint: /grades, field: newGrade, concept: Analyst Recommendation, role: attribute, raw_name: new_grade}
+  - {endpoint: /grades, field: action, concept: Analyst Recommendation, role: attribute, raw_name: action}
+  - {endpoint: /grades-historical, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /grades-historical, field: date, concept: Analyst Recommendation, role: event_date, raw_name: grade_date}
+  - {endpoint: /grades-historical, field: analystRatingsStrongBuy, concept: Analyst Recommendation, role: attribute, raw_name: analyst_ratings_strong_buy}
+  - {endpoint: /grades-historical, field: analystRatingsBuy, concept: Analyst Recommendation, role: attribute, raw_name: analyst_ratings_buy}
+  - {endpoint: /grades-historical, field: analystRatingsHold, concept: Analyst Recommendation, role: attribute, raw_name: analyst_ratings_hold}
+  - {endpoint: /grades-historical, field: analystRatingsSell, concept: Analyst Recommendation, role: attribute, raw_name: analyst_ratings_sell}
+  - {endpoint: /grades-historical, field: analystRatingsStrongSell, concept: Analyst Recommendation, role: attribute, raw_name: analyst_ratings_strong_sell}
+  - {endpoint: /ratings-historical, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /ratings-historical, field: date, concept: Security Rating, role: event_date, raw_name: rating_date}
+  - {endpoint: /ratings-historical, field: rating, concept: Security Rating, role: attribute, raw_name: rating}
+  - {endpoint: /ratings-historical, field: overallScore, concept: Security Rating, role: attribute, raw_name: overall_score}
+  - {endpoint: /ratings-historical, field: discountedCashFlowScore, concept: Security Rating, role: attribute, raw_name: discounted_cash_flow_score}
+  - {endpoint: /ratings-historical, field: returnOnEquityScore, concept: Security Rating, role: attribute, raw_name: return_on_equity_score}
+  - {endpoint: /ratings-historical, field: returnOnAssetsScore, concept: Security Rating, role: attribute, raw_name: return_on_assets_score}
+  - {endpoint: /ratings-historical, field: debtToEquityScore, concept: Security Rating, role: attribute, raw_name: debt_to_equity_score}
+  - {endpoint: /ratings-historical, field: priceToEarningsScore, concept: Security Rating, role: attribute, raw_name: price_to_earnings_score}
+  - {endpoint: /ratings-historical, field: priceToBookScore, concept: Security Rating, role: attribute, raw_name: price_to_book_score}
+  - {endpoint: /insider-trading/search, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /insider-trading/search, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /insider-trading/search, field: transactionDate, concept: Insider Transaction, role: event_date, raw_name: transaction_date}
+  - {endpoint: /insider-trading/search, field: reportingCik, concept: Identifier Scheme, role: identity, raw_name: reporting_cik}
+  - {endpoint: /insider-trading/search, field: companyCik, concept: Identifier Scheme, role: identity, raw_name: company_cik}
+  - {endpoint: /insider-trading/search, field: transactionType, concept: Insider Transaction, role: reference, raw_name: transaction_type}
+  - {endpoint: /insider-trading/search, field: securitiesOwned, concept: Insider Transaction, role: attribute, raw_name: securities_owned}
+  - {endpoint: /insider-trading/search, field: reportingName, concept: Corporate Insider, role: attribute, raw_name: person_name}
+  - {endpoint: /insider-trading/search, field: typeOfOwner, concept: Insider Transaction, role: attribute, raw_name: type_of_owner}
+  - {endpoint: /insider-trading/search, field: acquisitionOrDisposition, concept: Insider Transaction, role: attribute, raw_name: acquisition_or_disposition}
+  - {endpoint: /insider-trading/search, field: directOrIndirect, concept: Insider Transaction, role: attribute, raw_name: direct_or_indirect}
+  - {endpoint: /insider-trading/search, field: formType, concept: SEC Filing, role: attribute, raw_name: form_type}
+  - {endpoint: /insider-trading/search, field: securitiesTransacted, concept: Insider Transaction, role: attribute, raw_name: securities_transacted}
+  - {endpoint: /insider-trading/search, field: price, concept: Insider Transaction, role: attribute, raw_name: price}
+  - {endpoint: /insider-trading/search, field: securityName, concept: Insider Transaction, role: attribute, raw_name: security_name}
+  - {endpoint: /insider-trading/search, field: url, concept: SEC Filing, role: attribute, raw_name: filing_url}
+  - {endpoint: /insider-trading/statistics, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /insider-trading/statistics, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /insider-trading/statistics, field: year, concept: Fiscal Period, role: identity, raw_name: fiscal_year}
+  - {endpoint: /insider-trading/statistics, field: quarter, concept: Fiscal Period, role: identity, raw_name: fiscal_quarter}
+  - {endpoint: /insider-trading/statistics, field: acquiredTransactions, concept: Insider Transaction, role: attribute, raw_name: acquired_transactions}
+  - {endpoint: /insider-trading/statistics, field: disposedTransactions, concept: Insider Transaction, role: attribute, raw_name: disposed_transactions}
+  - {endpoint: /insider-trading/statistics, field: totalAcquired, concept: Insider Transaction, role: attribute, raw_name: total_acquired}
+  - {endpoint: /insider-trading/statistics, field: totalDisposed, concept: Insider Transaction, role: attribute, raw_name: total_disposed}
+  - {endpoint: /insider-trading/statistics, field: totalPurchases, concept: Insider Transaction, role: attribute, raw_name: total_purchases}
+  - {endpoint: /insider-trading/statistics, field: totalSales, concept: Insider Transaction, role: attribute, raw_name: total_sales}
+  - {endpoint: /insider-trading-transaction-type, field: transactionType, concept: Insider Transaction, role: identity, raw_name: transaction_type}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: cik, concept: Identifier Scheme, role: identity, raw_name: cik}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: symbol, concept: Listing, role: identity, raw_name: symbol}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: filingDate, concept: SEC Filing, role: known_from_date, raw_name: filing_date}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: acceptedDate, concept: SEC Filing, role: known_from_date, raw_name: accepted_date}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: cusip, concept: Identifier Scheme, role: identity, raw_name: cusip}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: nameOfReportingPerson, concept: Beneficial Owner, role: attribute, raw_name: name_of_reporting_person}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: citizenshipOrPlaceOfOrganization, concept: Beneficial Owner, role: attribute, raw_name: citizenship_or_place_of_organization}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: soleVotingPower, concept: Beneficial Ownership Position, role: attribute, raw_name: sole_voting_power}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: sharedVotingPower, concept: Beneficial Ownership Position, role: attribute, raw_name: shared_voting_power}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: soleDispositivePower, concept: Beneficial Ownership Position, role: attribute, raw_name: sole_dispositive_power}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: sharedDispositivePower, concept: Beneficial Ownership Position, role: attribute, raw_name: shared_dispositive_power}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: amountBeneficiallyOwned, concept: Beneficial Ownership Position, role: attribute, raw_name: amount_beneficially_owned}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: typeOfReportingPerson, concept: Beneficial Owner, role: attribute, raw_name: type_of_reporting_person}
+  - {endpoint: /acquisition-of-beneficial-ownership, field: url, concept: SEC Filing, role: attribute, raw_name: filing_url}
+  - {endpoint: /economic-indicators, field: name, concept: Macro Series, role: identity, raw_name: series_name}
+  - {endpoint: /economic-indicators, field: date, concept: Macro Observation, role: event_date, raw_name: observation_date}
+  - {endpoint: /economic-indicators, field: value, concept: Macro Observation, role: attribute, raw_name: observation_value}
+  - {endpoint: /treasury-rates, field: date, concept: Macro Observation, role: event_date, raw_name: observation_date}
+  - {endpoint: /treasury-rates, field: month1, concept: Macro Observation, role: attribute, raw_name: month_1}
+  - {endpoint: /treasury-rates, field: month2, concept: Macro Observation, role: attribute, raw_name: month_2}
+  - {endpoint: /treasury-rates, field: month3, concept: Macro Observation, role: attribute, raw_name: month_3}
+  - {endpoint: /treasury-rates, field: month6, concept: Macro Observation, role: attribute, raw_name: month_6}
+  - {endpoint: /treasury-rates, field: year1, concept: Macro Observation, role: attribute, raw_name: year_1}
+  - {endpoint: /treasury-rates, field: year2, concept: Macro Observation, role: attribute, raw_name: year_2}
+  - {endpoint: /treasury-rates, field: year3, concept: Macro Observation, role: attribute, raw_name: year_3}
+  - {endpoint: /treasury-rates, field: year5, concept: Macro Observation, role: attribute, raw_name: year_5}
+  - {endpoint: /treasury-rates, field: year7, concept: Macro Observation, role: attribute, raw_name: year_7}
+  - {endpoint: /treasury-rates, field: year10, concept: Macro Observation, role: attribute, raw_name: year_10}
+  - {endpoint: /treasury-rates, field: year20, concept: Macro Observation, role: attribute, raw_name: year_20}
+  - {endpoint: /treasury-rates, field: year30, concept: Macro Observation, role: attribute, raw_name: year_30}
+  - {endpoint: /price-target-consensus, field: symbol, concept: Price Target Consensus, role: identity, raw_name: symbol}
+  - {endpoint: /price-target-consensus, field: "@run_date", concept: Price Target Consensus, role: event_date, raw_name: observation_date}
+  - {endpoint: /price-target-consensus, field: targetHigh, concept: Price Target Consensus, role: attribute, raw_name: target_high}
+  - {endpoint: /price-target-consensus, field: targetLow, concept: Price Target Consensus, role: attribute, raw_name: target_low}
+  - {endpoint: /price-target-consensus, field: targetConsensus, concept: Price Target Consensus, role: attribute, raw_name: target_consensus}
+  - {endpoint: /price-target-consensus, field: targetMedian, concept: Price Target Consensus, role: attribute, raw_name: target_median}
+  - {endpoint: /price-target-summary, field: symbol, concept: Price Target Consensus, role: identity, raw_name: symbol}
+  - {endpoint: /price-target-summary, field: "@run_date", concept: Price Target Consensus, role: event_date, raw_name: observation_date}
+  - {endpoint: /price-target-summary, field: lastMonthCount, concept: Price Target Consensus, role: attribute, raw_name: last_month_count}
+  - {endpoint: /price-target-summary, field: lastMonthAvgPriceTarget, concept: Price Target Consensus, role: attribute, raw_name: last_month_avg_price_target}
+  - {endpoint: /price-target-summary, field: lastQuarterCount, concept: Price Target Consensus, role: attribute, raw_name: last_quarter_count}
+  - {endpoint: /price-target-summary, field: lastQuarterAvgPriceTarget, concept: Price Target Consensus, role: attribute, raw_name: last_quarter_avg_price_target}
+  - {endpoint: /price-target-summary, field: lastYearCount, concept: Price Target Consensus, role: attribute, raw_name: last_year_count}
+  - {endpoint: /price-target-summary, field: lastYearAvgPriceTarget, concept: Price Target Consensus, role: attribute, raw_name: last_year_avg_price_target}
+  - {endpoint: /price-target-summary, field: allTimeCount, concept: Price Target Consensus, role: attribute, raw_name: all_time_count}
+  - {endpoint: /price-target-summary, field: allTimeAvgPriceTarget, concept: Price Target Consensus, role: attribute, raw_name: all_time_avg_price_target}

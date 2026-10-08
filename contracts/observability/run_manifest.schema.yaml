@@ -1,0 +1,50 @@
+title: Pipeline Run Manifest
+schema_version: 1
+description: File-based observability contract emitted by pipeline batch runners.
+required:
+  - schema_version
+  - run_id
+  - run_type
+  - run_date
+  - started_at
+  - finished_at
+  - duration_seconds
+  - status
+  - inputs
+  - outputs
+  - metrics
+  - failures
+fields:
+  schema_version:
+    type: integer
+    allowed: [1]
+  run_id:
+    type: uuid
+  run_type:
+    type: string
+  run_date:
+    type: date
+  started_at:
+    type: timestamp
+  finished_at:
+    type: timestamp
+  duration_seconds:
+    type: number
+    minimum: 0
+  status:
+    type: string
+    allowed: [success, failed]
+  inputs:
+    type: object
+  outputs:
+    type: array
+    items: object
+  metrics:
+    type: object
+  failures:
+    type: array
+    items: object
+semantic_rules:
+  - success manifests have no failures
+  - failed manifests have at least one failure
+  - finished_at is not before started_at

@@ -1,0 +1,8 @@
+area_code: pr
+concepts:
+  - name: Beneficial Ownership Position
+    grain: event
+    description: >
+      Vị thế sở hữu hưởng lợi trên 5% do một bên khai báo tại một lần nộp hồ sơ.
+      Là TRẠNG THÁI SỞ HỮU, không phải hành vi chuyển giao (quyết định Q2).
+    source_endpoints: [/acquisition-of-beneficial-ownership]

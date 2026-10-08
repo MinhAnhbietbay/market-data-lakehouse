@@ -1,0 +1,22 @@
+area_code: ip
+concepts:
+  - name: Legal Entity
+    grain: dimension
+    description: Pháp nhân phát hành chứng khoán, định danh bền vững bằng cik.
+    source_endpoints: [/all-industry-classification, /cik-list, /sp500-constituent, /financial-statement-symbol-list, /profile, /sec-profile]
+  - name: Corporate Insider
+    grain: dimension
+    description: Cá nhân là lãnh đạo hoặc người nội bộ của một pháp nhân.
+    source_endpoints: [/insider-trading/search]
+  - name: Research Firm
+    grain: dimension
+    description: Tổ chức phân tích đưa ra khuyến nghị về một chứng khoán.
+    source_endpoints: [/grades]
+  - name: Beneficial Owner
+    grain: dimension
+    description: Cá nhân hoặc tổ chức khai báo sở hữu hưởng lợi trên 5%.
+    source_endpoints: [/acquisition-of-beneficial-ownership]
+  - name: Workforce Observation
+    grain: period_fact
+    description: Số nhân viên toàn thời gian của pháp nhân tại một kỳ báo cáo.
+    source_endpoints: [/historical-employee-count]

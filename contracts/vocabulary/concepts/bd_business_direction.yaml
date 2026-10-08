@@ -1,0 +1,24 @@
+area_code: bd
+concepts:
+  - name: Analyst Estimate
+    grain: period_fact
+    description: >
+      Dự báo của giới phân tích cho một kỳ tương lai. Giá trị consensus (revenueAvg, epsAvg)
+      và số analyst tham gia là PROPERTY của concept này, không phải concept riêng.
+    source_endpoints: [/analyst-estimates]
+  - name: Analyst Recommendation
+    grain: event
+    description: >
+      Một lần thay đổi khuyến nghị của một tổ chức phân tích, hoặc ảnh chụp phân bố khuyến nghị tại một ngày.
+    source_endpoints: [/grades, /grades-historical]
+  - name: Price Target Consensus
+    grain: daily_fact
+    description: >
+      Dự đoán giá mục tiêu tổng hợp (consensus) từ /price-target-consensus (high/low/median/
+      consensus) và /price-target-summary (số lượng + giá trung bình theo cửa sổ tháng/quý/
+      năm/toàn thời gian). Khoá vật lý là (symbol, observation_date) với
+      observation_date = @run_date, vì CẢ HAI endpoint đều không có cột `date` (F11, spec
+      2026-08-18) -- lịch sử chỉ bắt đầu từ lần chạy đầu tiên, không backfill được. KHÔNG
+      gộp vào "Analyst Estimate": concept đó là period_fact, khoá có
+      estimate_period_end_date (dự báo cho một kỳ tài chính), còn price target không có kỳ.
+    source_endpoints: [/price-target-consensus, /price-target-summary]

@@ -1,0 +1,33 @@
+area_code: cm
+concepts:
+  - name: Currency
+    grain: dimension
+    description: Đơn vị tiền tệ của một giá trị được báo cáo.
+    source_endpoints: [/balance-sheet-statement, /cash-flow-statement, /economic-calendar, /financial-statement-symbol-list, /income-statement, /index-list, /owner-earnings, /profile, /ratios, /revenue-geographic-segmentation, /sec-profile]
+  - name: Identifier Scheme
+    grain: dimension
+    description: >
+      Hệ định danh mà một mã thuộc về — cik, isin, cusip, openFigi, mã số thuế.
+      Tồn tại vì luật N1: pháp nhân, chứng khoán và niêm yết có ba hệ định danh riêng.
+    source_endpoints: [/acquisition-of-beneficial-ownership, /all-industry-classification, /balance-sheet-statement, /cash-flow-statement, /cik-list, /sp500-constituent, /historical-employee-count, /income-statement, /insider-trading/search, /insider-trading/statistics, /ipos-disclosure, /mergers-acquisitions-search, /profile, /sec-profile]
+  - name: Industry Classification System
+    grain: dimension
+    description: HỆ phân loại ngành (SIC, hệ riêng của FMP) — khác với nhóm ngành cụ thể ở gr.
+    source_endpoints: [/all-industry-classification, /sec-profile]
+  - name: Macro Series
+    grain: dimension
+    description: Định nghĩa một chuỗi vĩ mô — mã chuỗi, tên, đơn vị, cơ quan công bố.
+    source_endpoints: [/economic-indicators]
+  - name: Macro Observation
+    grain: series
+    description: Giá trị của một Macro Series tại một ngày. Grain (series, date) — không ép về (date, symbol).
+    source_endpoints: [/economic-indicators, /treasury-rates]
+  - name: Trading Day
+    grain: dimension
+    description: >
+      Một ngày thị trường mở cửa. KHÔNG CÓ NGUỒN — FMP không có endpoint lịch giao dịch.
+      Suy từ tập ngày phân biệt trong Daily Price Bar. Nợ N-1 của spec. source_endpoints
+      rỗng có chủ đích: /historical-price-eod/non-split-adjusted là nơi ngày được SUY RA
+      downstream, không phải field nguồn của concept này.
+    source_endpoints: []
+    no_source: true

@@ -1,0 +1,2189 @@
+# ⚠ FILE NAY KHONG CON SINH LAI DUOC NGUYEN VEN.
+# Goc: scripts/data/export_fmp_raw_fields.py doc FMP_Field_Raw_Derived.xlsx (410 field / 42 API).
+# Da SUA TAY sau do (2026-08-18, spec 2026-08-18-intermediate-identity-spine-design.md):
+#   - THEM 14 field cua /price-target-consensus va /price-target-summary  (F11, F11b)
+#     -> workbook khong co chung; chung chua bao gio qua vong duyet 445 field.
+#   - DOI TEN 4 endpoint: /shares-float-all -> /shares-float                (F1)
+#                         /mergers-acquisitions-latest -> ...-search        (F7)
+#                         /dowjones-constituent -> /sp500-constituent       (F14)
+#                         /historical-dowjones-constituent -> /historical-sp500-constituent
+# => CHAY LAI SCRIPT SE XOA SACH cac thay doi tren. Muon sinh lai thi phai dua
+#    chung vao script truoc (them hang so RENAMED / EXTRA_FIELDS canh EXCLUDED).
+version: 1
+generated_by: scripts/data/export_fmp_raw_fields.py (+ sua tay, xem canh bao tren)
+source_workbook: FMP_Field_Raw_Derived.xlsx
+source_sheet: Raw
+excluded_endpoints:
+- endpoint: /actively-trading-list
+  reason: 'Mâu thuẫn luật N3: danh sách của hôm nay, dùng lọc universe quá khứ là
+    survivorship bias.'
+- endpoint: /batch-aftermarket-quote
+  reason: Ảnh chụp tại thời điểm gọi, không có chiều lịch sử. Vi phạm D5 (chỉ EOD).
+- endpoint: /governance-executive-compensation
+  reason: Dữ liệu ở mức cá nhân lãnh đạo, không phải mức symbol/company như phần còn
+    lại của vocabulary — không phù hợp bài toán alpha nghiên cứu định lượng
+    cross-sectional theo công ty của dự án.
+- endpoint: /key-executives
+  reason: Dữ liệu ở mức cá nhân lãnh đạo, không phải mức symbol/company như phần còn
+    lại của vocabulary — không phù hợp bài toán alpha nghiên cứu định lượng
+    cross-sectional theo công ty của dự án.
+- endpoint: /key-metrics
+  reason: Sau khi tách phần Derived chỉ còn field định danh — 0 field dữ liệu.
+fields:
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: revenueLow
+  type: number
+  meaning: Dự báo doanh thu thấp nhất trong các chuyên viên phân tích.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: revenueHigh
+  type: number
+  meaning: Dự báo doanh thu cao nhất trong các chuyên viên phân tích.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: revenueAvg
+  type: number
+  meaning: Dự báo doanh thu trung bình — giá trị consensus.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: ebitdaLow
+  type: number
+  meaning: Dự báo EBITDA thấp nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: ebitdaHigh
+  type: number
+  meaning: Dự báo EBITDA cao nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: ebitdaAvg
+  type: number
+  meaning: Dự báo EBITDA trung bình.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: ebitLow
+  type: number
+  meaning: Dự báo EBIT thấp nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: ebitHigh
+  type: number
+  meaning: Dự báo EBIT cao nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: ebitAvg
+  type: number
+  meaning: Dự báo EBIT trung bình.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: netIncomeLow
+  type: number
+  meaning: Dự báo lợi nhuận ròng thấp nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: netIncomeHigh
+  type: number
+  meaning: Dự báo lợi nhuận ròng cao nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: netIncomeAvg
+  type: number
+  meaning: Dự báo lợi nhuận ròng trung bình.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: sgaExpenseLow
+  type: number
+  meaning: Dự báo chi phí bán hàng và quản lý thấp nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: sgaExpenseHigh
+  type: number
+  meaning: Dự báo chi phí bán hàng và quản lý cao nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: sgaExpenseAvg
+  type: number
+  meaning: Dự báo chi phí bán hàng và quản lý trung bình.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: epsAvg
+  type: number
+  meaning: Dự báo lợi nhuận trên mỗi cổ phiếu trung bình — consensus EPS.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: epsHigh
+  type: number
+  meaning: Dự báo lợi nhuận trên mỗi cổ phiếu cao nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: epsLow
+  type: number
+  meaning: Dự báo lợi nhuận trên mỗi cổ phiếu thấp nhất.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: numAnalystsRevenue
+  type: number
+  meaning: Số chuyên viên phân tích tham gia dự báo doanh thu — độ tin cậy của consensus.
+- api: Financial Estimates
+  endpoint: /analyst-estimates
+  field: numAnalystsEps
+  type: number
+  meaning: Số chuyên viên phân tích tham gia dự báo EPS — độ tin cậy của consensus.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: rating
+  type: string
+  meaning: Xếp hạng tổng hợp của FMP cho cổ phiếu, dạng chữ.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: overallScore
+  type: number
+  meaning: Điểm tổng hợp do FMP tính từ năm điểm thành phần bên dưới.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: discountedCashFlowScore
+  type: number
+  meaning: Điểm thành phần dựa trên chênh lệch giá thị trường so với giá trị DCF.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: returnOnEquityScore
+  type: number
+  meaning: Điểm thành phần dựa trên tỷ suất sinh lời trên vốn chủ sở hữu.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: returnOnAssetsScore
+  type: number
+  meaning: Điểm thành phần dựa trên tỷ suất sinh lời trên tài sản.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: debtToEquityScore
+  type: number
+  meaning: Điểm thành phần dựa trên hệ số nợ trên vốn chủ sở hữu.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: priceToEarningsScore
+  type: number
+  meaning: Điểm thành phần dựa trên hệ số giá trên lợi nhuận.
+- api: Historical Ratings
+  endpoint: /ratings-historical
+  field: priceToBookScore
+  type: number
+  meaning: Điểm thành phần dựa trên hệ số giá trên giá trị sổ sách.
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: analystRatingsStrongBuy
+  type: number
+  meaning: Số chuyên viên phân tích khuyến nghị mua mạnh.
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: analystRatingsBuy
+  type: number
+  meaning: Số chuyên viên phân tích khuyến nghị mua.
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: analystRatingsHold
+  type: number
+  meaning: Số chuyên viên phân tích khuyến nghị nắm giữ.
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: analystRatingsSell
+  type: number
+  meaning: Số chuyên viên phân tích khuyến nghị bán.
+- api: Historical Stock Grades
+  endpoint: /grades-historical
+  field: analystRatingsStrongSell
+  type: number
+  meaning: Số chuyên viên phân tích khuyến nghị bán mạnh.
+- api: Stock Grades
+  endpoint: /grades
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Stock Grades
+  endpoint: /grades
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Stock Grades
+  endpoint: /grades
+  field: gradingCompany
+  type: string
+  meaning: Tên tổ chức phân tích đưa ra khuyến nghị.
+- api: Stock Grades
+  endpoint: /grades
+  field: previousGrade
+  type: string
+  meaning: Khuyến nghị trước lần thay đổi này.
+- api: Stock Grades
+  endpoint: /grades
+  field: newGrade
+  type: string
+  meaning: Khuyến nghị sau lần thay đổi này.
+- api: Stock Grades
+  endpoint: /grades
+  field: action
+  type: string
+  meaning: 'Loại hành động: nâng hạng, hạ hạng, giữ nguyên hay khởi tạo.'
+- api: Dividends Company
+  endpoint: /dividends
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Dividends Company
+  endpoint: /dividends
+  field: date
+  type: string
+  meaning: Ngày giao dịch không hưởng quyền (ex-dividend date) — ngày giá bị trừ đi
+    phần cổ tức.
+- api: Dividends Company
+  endpoint: /dividends
+  field: recordDate
+  type: string
+  meaning: Ngày chốt danh sách cổ đông được nhận cổ tức.
+- api: Dividends Company
+  endpoint: /dividends
+  field: paymentDate
+  type: string
+  meaning: Ngày tiền cổ tức thực tế về tài khoản cổ đông.
+- api: Dividends Company
+  endpoint: /dividends
+  field: declarationDate
+  type: string
+  meaning: Ngày hội đồng quản trị công bố cổ tức — thời điểm thị trường BẮT ĐẦU biết.
+- api: Dividends Company
+  endpoint: /dividends
+  field: dividend
+  type: number
+  meaning: Cổ tức tiền mặt trên mỗi cổ phiếu, theo mệnh giá tại thời điểm chi trả
+    (CHƯA điều chỉnh chia tách sau đó).
+- api: Dividends Company
+  endpoint: /dividends
+  field: frequency
+  type: string
+  meaning: Tần suất chi trả cổ tức do doanh nghiệp công bố (Quarterly, Semi-Annual,
+    Annual, Monthly…).
+- api: Earnings Report
+  endpoint: /earnings
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Earnings Report
+  endpoint: /earnings
+  field: date
+  type: string
+  meaning: Ngày công bố kết quả kinh doanh — thời điểm thị trường biết số liệu thực
+    tế.
+- api: Earnings Report
+  endpoint: /earnings
+  field: epsActual
+  type: ''
+  meaning: Lợi nhuận trên mỗi cổ phiếu THỰC TẾ đã công bố cho kỳ đó.
+- api: Earnings Report
+  endpoint: /earnings
+  field: epsEstimated
+  type: number
+  meaning: Lợi nhuận trên mỗi cổ phiếu mà giới phân tích DỰ BÁO trước khi công bố.
+- api: Earnings Report
+  endpoint: /earnings
+  field: revenueActual
+  type: ''
+  meaning: Doanh thu THỰC TẾ đã công bố cho kỳ đó.
+- api: Earnings Report
+  endpoint: /earnings
+  field: revenueEstimated
+  type: number
+  meaning: Doanh thu mà giới phân tích DỰ BÁO trước khi công bố.
+- api: Earnings Report
+  endpoint: /earnings
+  field: lastUpdated
+  type: string
+  meaning: Ngày bản ghi được nhà cung cấp cập nhật lần cuối.
+- api: IPOs Calendar
+  endpoint: /ipos-calendar
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: IPOs Calendar
+  endpoint: /ipos-calendar
+  field: daa
+  type: string
+  meaning: Không rõ. api-docs.md không mô tả field này; giá trị mẫu là dấu thời gian
+    trùng ngày ở field date.
+- api: IPOs Calendar
+  endpoint: /ipos-calendar
+  field: exchange
+  type: string
+  meaning: Mã sàn nơi công cụ được niêm yết (vd NASDAQ, NYSE).
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: filingDate
+  type: string
+  meaning: Ngày hồ sơ được nộp lên SEC — thời điểm thị trường BẮT ĐẦU biết thông tin.
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: acceptedDate
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giờ phút).
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: effectivenessDate
+  type: string
+  meaning: Ngày hồ sơ đăng ký có hiệu lực theo phê duyệt của SEC.
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: form
+  type: string
+  meaning: Loại biểu mẫu SEC của hồ sơ (vd CERT, 8-A12B).
+- api: IPOs Disclosure
+  endpoint: /ipos-disclosure
+  field: url
+  type: string
+  meaning: URL tới hồ sơ gốc trên SEC EDGAR.
+- api: Stock Split Details
+  endpoint: /splits
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Stock Split Details
+  endpoint: /splits
+  field: date
+  type: string
+  meaning: Ngày chia tách có hiệu lực — ngày giá bắt đầu giao dịch theo tỷ lệ mới.
+- api: Stock Split Details
+  endpoint: /splits
+  field: numerator
+  type: number
+  meaning: Tử số của tỷ lệ chia tách (số cổ phiếu MỚI nhận được).
+- api: Stock Split Details
+  endpoint: /splits
+  field: denominator
+  type: number
+  meaning: Mẫu số của tỷ lệ chia tách (số cổ phiếu CŨ bị thay thế).
+- api: Stock Split Details
+  endpoint: /splits
+  field: splitType
+  type: string
+  meaning: 'Loại chia tách: stock-split (chia tách thuận) hay reverse-split (gộp ngược).'
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: date
+  type: string
+  meaning: Ngày giao dịch (phiên) của bản ghi giá.
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: adjOpen
+  type: number
+  meaning: 'Giá mở cửa đã điều chỉnh chia tách (theo tên endpoint: KHÔNG điều chỉnh
+    chia tách).'
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: adjHigh
+  type: number
+  meaning: Giá cao nhất phiên, mức điều chỉnh chưa xác định.
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: adjLow
+  type: number
+  meaning: Giá thấp nhất phiên, mức điều chỉnh chưa xác định.
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: adjClose
+  type: number
+  meaning: Giá đóng cửa phiên, mức điều chỉnh chưa xác định.
+- api: Unadjusted Stock Price
+  endpoint: /historical-price-eod/non-split-adjusted
+  field: volume
+  type: number
+  meaning: Khối lượng cổ phiếu khớp lệnh trong phiên.
+- api: Shares Float
+  endpoint: /shares-float
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Shares Float
+  endpoint: /shares-float
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Shares Float
+  endpoint: /shares-float
+  field: floatShares
+  type: number
+  meaning: Số cổ phiếu tự do chuyển nhượng.
+- api: Shares Float
+  endpoint: /shares-float
+  field: outstandingShares
+  type: number
+  meaning: Tổng số cổ phiếu đang lưu hành.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: symbol
+  type: string
+  meaning: Mã giao dịch.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: acceptanceTime
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giây).
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: periodOfReport
+  type: string
+  meaning: Ngày kết thúc kỳ báo cáo mà số liệu mô tả.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: formType
+  type: string
+  meaning: Loại biểu mẫu SEC chứa số liệu.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: filingDate
+  type: string
+  meaning: Ngày hồ sơ được nộp lên SEC — thời điểm thị trường BẮT ĐẦU biết thông tin.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: employeeCount
+  type: number
+  meaning: Số nhân viên toàn thời gian tại kỳ báo cáo.
+- api: Company Historical Employee Count
+  endpoint: /historical-employee-count
+  field: source
+  type: string
+  meaning: URL tới hồ sơ SEC gốc mà nhà cung cấp trích số liệu ra.
+- api: Company Profile Data
+  endpoint: /profile
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Company Profile Data
+  endpoint: /profile
+  field: companyName
+  type: string
+  meaning: Tên pháp nhân phát hành.
+- api: Company Profile Data
+  endpoint: /profile
+  field: currency
+  type: string
+  meaning: Đơn vị tiền tệ niêm yết của cổ phiếu.
+- api: Company Profile Data
+  endpoint: /profile
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Company Profile Data
+  endpoint: /profile
+  field: isin
+  type: string
+  meaning: International Securities Identification Number — mã định danh chứng khoán
+    chuẩn ISO 6166.
+- api: Company Profile Data
+  endpoint: /profile
+  field: cusip
+  type: string
+  meaning: CUSIP — mã định danh chứng khoán Bắc Mỹ, 9 ký tự.
+- api: Company Profile Data
+  endpoint: /profile
+  field: exchange
+  type: string
+  meaning: Mã sàn nơi công cụ được niêm yết (vd NASDAQ, NYSE).
+- api: Company Profile Data
+  endpoint: /profile
+  field: industry
+  type: string
+  meaning: Phân ngành cấp 2 theo cách phân loại của FMP (tương đương GICS Industry,
+    không phải GICS thật).
+- api: Company Profile Data
+  endpoint: /profile
+  field: website
+  type: string
+  meaning: Địa chỉ website của công ty.
+- api: Company Profile Data
+  endpoint: /profile
+  field: description
+  type: string
+  meaning: Mô tả hoạt động kinh doanh của công ty dưới dạng văn bản tự do.
+- api: Company Profile Data
+  endpoint: /profile
+  field: ceo
+  type: string
+  meaning: Tên tổng giám đốc đương nhiệm.
+- api: Company Profile Data
+  endpoint: /profile
+  field: sector
+  type: string
+  meaning: Phân ngành cấp 1 theo cách phân loại của FMP (tương đương GICS Sector,
+    không phải GICS thật).
+- api: Company Profile Data
+  endpoint: /profile
+  field: country
+  type: string
+  meaning: Mã quốc gia đăng ký của pháp nhân.
+- api: Company Profile Data
+  endpoint: /profile
+  field: fullTimeEmployees
+  type: string
+  meaning: Số nhân viên toàn thời gian tại kỳ báo cáo gần nhất.
+- api: Company Profile Data
+  endpoint: /profile
+  field: phone
+  type: string
+  meaning: Số điện thoại liên hệ của công ty.
+- api: Company Profile Data
+  endpoint: /profile
+  field: address
+  type: string
+  meaning: Địa chỉ trụ sở chính.
+- api: Company Profile Data
+  endpoint: /profile
+  field: city
+  type: string
+  meaning: Thành phố đặt trụ sở chính.
+- api: Company Profile Data
+  endpoint: /profile
+  field: state
+  type: string
+  meaning: Bang đặt trụ sở chính.
+- api: Company Profile Data
+  endpoint: /profile
+  field: zip
+  type: string
+  meaning: Mã bưu chính của trụ sở chính.
+- api: Company Profile Data
+  endpoint: /profile
+  field: image
+  type: string
+  meaning: URL ảnh logo công ty.
+- api: Company Profile Data
+  endpoint: /profile
+  field: ipoDate
+  type: string
+  meaning: Ngày cổ phiếu bắt đầu giao dịch lần đầu.
+- api: Company Profile Data
+  endpoint: /profile
+  field: defaultImage
+  type: boolean
+  meaning: Cờ cho biết logo đang dùng là ảnh mặc định hay ảnh thật.
+- api: Company Profile Data
+  endpoint: /profile
+  field: isEtf
+  type: boolean
+  meaning: Cờ cho biết công cụ này là quỹ ETF.
+- api: Company Profile Data
+  endpoint: /profile
+  field: isAdr
+  type: boolean
+  meaning: Cờ cho biết đây là chứng chỉ lưu ký của công ty nước ngoài.
+- api: Company Profile Data
+  endpoint: /profile
+  field: isFund
+  type: boolean
+  meaning: Cờ cho biết công cụ này là quỹ đầu tư.
+- api: Delisted Companies
+  endpoint: /delisted-companies
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Delisted Companies
+  endpoint: /delisted-companies
+  field: exchange
+  type: string
+  meaning: Mã sàn nơi công cụ được niêm yết (vd NASDAQ, NYSE).
+- api: Delisted Companies
+  endpoint: /delisted-companies
+  field: ipoDate
+  type: string
+  meaning: Ngày bắt đầu niêm yết của mã đã huỷ niêm yết.
+- api: Delisted Companies
+  endpoint: /delisted-companies
+  field: delistedDate
+  type: string
+  meaning: Ngày cổ phiếu bị huỷ niêm yết khỏi sàn.
+- api: Historical Market Cap
+  endpoint: /historical-market-capitalization
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Historical Market Cap
+  endpoint: /historical-market-capitalization
+  field: date
+  type: string
+  meaning: Ngày giao dịch của giá trị vốn hoá.
+- api: Historical Market Cap
+  endpoint: /historical-market-capitalization
+  field: marketCap
+  type: number
+  meaning: Vốn hoá thị trường theo từng ngày giao dịch — chuỗi thời gian thật.
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: symbol
+  type: string
+  meaning: Mã giao dịch.
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: cik
+  type: string
+  meaning: Central Index Key do SEC cấp.
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: targetedCik
+  type: string
+  meaning: CIK của công ty bị thâu tóm.
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: targetedSymbol
+  type: string
+  meaning: Mã giao dịch của công ty bị thâu tóm.
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: transactionDate
+  type: string
+  meaning: Ngày thương vụ được công bố.
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: acceptedDate
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giờ phút).
+- api: Mergers & Acquisitions Search
+  endpoint: /mergers-acquisitions-search
+  field: link
+  type: string
+  meaning: URL tới tài liệu gốc trên hệ thống SEC.
+- api: Available Countries
+  endpoint: /available-countries
+  field: country
+  type: string
+  meaning: Mã hoặc tên quốc gia.
+- api: Available Industries
+  endpoint: /available-industries
+  field: industry
+  type: string
+  meaning: Phân ngành cấp 2 theo cách phân loại của FMP.
+- api: Available Sectors
+  endpoint: /available-sectors
+  field: sector
+  type: string
+  meaning: Phân ngành cấp 1 theo cách phân loại của FMP.
+- api: CIK List
+  endpoint: /cik-list
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: CIK List
+  endpoint: /cik-list
+  field: companyName
+  type: string
+  meaning: Tên pháp nhân phát hành.
+- api: Financial Statement Symbols List
+  endpoint: /financial-statement-symbol-list
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Financial Statement Symbols List
+  endpoint: /financial-statement-symbol-list
+  field: companyName
+  type: string
+  meaning: Tên pháp nhân phát hành.
+- api: Financial Statement Symbols List
+  endpoint: /financial-statement-symbol-list
+  field: tradingCurrency
+  type: string
+  meaning: Đơn vị tiền tệ dùng để giao dịch cổ phiếu.
+- api: Financial Statement Symbols List
+  endpoint: /financial-statement-symbol-list
+  field: reportingCurrency
+  type: string
+  meaning: Đơn vị tiền tệ dùng trong báo cáo tài chính.
+- api: Symbol Changes List
+  endpoint: /symbol-change
+  field: date
+  type: string
+  meaning: Ngày việc đổi mã có hiệu lực.
+- api: Symbol Changes List
+  endpoint: /symbol-change
+  field: oldSymbol
+  type: string
+  meaning: Mã giao dịch trước khi đổi.
+- api: Symbol Changes List
+  endpoint: /symbol-change
+  field: newSymbol
+  type: string
+  meaning: Mã giao dịch sau khi đổi.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: country
+  type: string
+  meaning: Mã hoặc tên quốc gia.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: event
+  type: string
+  meaning: Tên sự kiện công bố dữ liệu vĩ mô.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: currency
+  type: string
+  meaning: Đơn vị tiền tệ của giá trị được báo cáo.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: previous
+  type: ''
+  meaning: Giá trị của kỳ công bố liền trước.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: estimate
+  type: ''
+  meaning: Giá trị thị trường dự báo trước khi công bố.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: actual
+  type: ''
+  meaning: Giá trị công bố thực tế.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: impact
+  type: string
+  meaning: Mức độ tác động dự kiến lên thị trường.
+- api: Economic Data Releases Calendar
+  endpoint: /economic-calendar
+  field: unit
+  type: ''
+  meaning: Đơn vị đo của giá trị công bố.
+- api: Economics Indicators
+  endpoint: /economic-indicators
+  field: name
+  type: string
+  meaning: Tên của đối tượng được trả về (công ty, quỹ, chỉ số… tuỳ endpoint).
+- api: Economics Indicators
+  endpoint: /economic-indicators
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Economics Indicators
+  endpoint: /economic-indicators
+  field: value
+  type: number
+  meaning: Giá trị số của bản ghi.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: month1
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 1 tháng.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: month2
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 2 tháng.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: month3
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 3 tháng.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: month6
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 6 tháng.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year1
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 1 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year2
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 2 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year3
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 3 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year5
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 5 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year7
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 7 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year10
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 10 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year20
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 20 năm.
+- api: Treasury Rates
+  endpoint: /treasury-rates
+  field: year30
+  type: number
+  meaning: Lợi suất trái phiếu chính phủ Mỹ kỳ hạn 30 năm.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: name
+  type: string
+  meaning: Tên của đối tượng được trả về (công ty, quỹ, chỉ số… tuỳ endpoint).
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: sector
+  type: string
+  meaning: Phân ngành cấp 1 theo cách phân loại của FMP.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: subSector
+  type: string
+  meaning: Phân ngành cấp dưới của thành viên rổ.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: headQuarter
+  type: string
+  meaning: Nơi đặt trụ sở chính của thành viên rổ.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: dateFirstAdded
+  type: string
+  meaning: Ngày mã lần đầu được thêm vào rổ chỉ số.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: S&P 500 Constituent
+  endpoint: /sp500-constituent
+  field: founded
+  type: string
+  meaning: Năm thành lập công ty.
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: dateAdded
+  type: string
+  meaning: Ngày mã được thêm vào rổ chỉ số.
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: addedSecurity
+  type: string
+  meaning: Tên chứng khoán được thêm vào rổ.
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: removedTicker
+  type: string
+  meaning: Mã chứng khoán bị loại khỏi rổ.
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: removedSecurity
+  type: string
+  meaning: Tên chứng khoán bị loại khỏi rổ.
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Historical S&P 500 Constituent
+  endpoint: /historical-sp500-constituent
+  field: reason
+  type: string
+  meaning: Lý do thay đổi thành phần rổ chỉ số.
+- api: Stock Market Indexes List
+  endpoint: /index-list
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Stock Market Indexes List
+  endpoint: /index-list
+  field: name
+  type: string
+  meaning: Tên của đối tượng được trả về (công ty, quỹ, chỉ số… tuỳ endpoint).
+- api: Stock Market Indexes List
+  endpoint: /index-list
+  field: exchange
+  type: string
+  meaning: Mã sàn nơi công cụ được niêm yết (vd NASDAQ, NYSE).
+- api: Stock Market Indexes List
+  endpoint: /index-list
+  field: currency
+  type: string
+  meaning: Đơn vị tiền tệ của giá trị được báo cáo.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: filingDate
+  type: string
+  meaning: Ngày hồ sơ được nộp lên SEC — thời điểm thị trường BẮT ĐẦU biết thông tin.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: acceptedDate
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giờ phút).
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: cusip
+  type: string
+  meaning: CUSIP — mã định danh chứng khoán Bắc Mỹ, 9 ký tự.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: nameOfReportingPerson
+  type: string
+  meaning: Tên cá nhân hoặc tổ chức khai báo sở hữu lớn.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: citizenshipOrPlaceOfOrganization
+  type: string
+  meaning: Quốc tịch cá nhân hoặc nơi thành lập tổ chức khai báo.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: soleVotingPower
+  type: string
+  meaning: Số cổ phiếu mà bên khai báo có quyền biểu quyết độc lập.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: sharedVotingPower
+  type: string
+  meaning: Số cổ phiếu mà bên khai báo có quyền biểu quyết chung với bên khác.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: soleDispositivePower
+  type: string
+  meaning: Số cổ phiếu mà bên khai báo có quyền định đoạt độc lập.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: sharedDispositivePower
+  type: string
+  meaning: Số cổ phiếu mà bên khai báo có quyền định đoạt chung.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: amountBeneficiallyOwned
+  type: string
+  meaning: Tổng số cổ phiếu thuộc sở hữu hưởng lợi của bên khai báo.
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: typeOfReportingPerson
+  type: string
+  meaning: Loại bên khai báo (cá nhân, quỹ, ngân hàng…).
+- api: Acquisition Ownership
+  endpoint: /acquisition-of-beneficial-ownership
+  field: url
+  type: string
+  meaning: URL tới tài liệu gốc trên SEC EDGAR.
+- api: All Insider Transaction Types
+  endpoint: /insider-trading-transaction-type
+  field: transactionType
+  type: string
+  meaning: Mã loại giao dịch theo biểu mẫu 4 (P mua, S bán, A trao thưởng, M thực
+    hiện quyền chọn…).
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: year
+  type: number
+  meaning: Năm của bản ghi.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: quarter
+  type: number
+  meaning: Quý của bản ghi.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: acquiredTransactions
+  type: number
+  meaning: Số lượt giao dịch mua vào trong quý.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: disposedTransactions
+  type: number
+  meaning: Số lượt giao dịch bán ra trong quý.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: totalAcquired
+  type: number
+  meaning: Tổng số cổ phiếu mua vào trong quý.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: totalDisposed
+  type: number
+  meaning: Tổng số cổ phiếu bán ra trong quý.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: totalPurchases
+  type: number
+  meaning: Tổng giá trị mua vào trong quý.
+- api: Insider Trade Statistics
+  endpoint: /insider-trading/statistics
+  field: totalSales
+  type: number
+  meaning: Tổng giá trị bán ra trong quý.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: filingDate
+  type: string
+  meaning: Ngày biểu mẫu 4 được nộp lên SEC.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: transactionDate
+  type: string
+  meaning: Ngày người nội bộ thực hiện giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: reportingCik
+  type: string
+  meaning: CIK của cá nhân nội bộ thực hiện giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: companyCik
+  type: string
+  meaning: CIK của công ty phát hành cổ phiếu được giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: transactionType
+  type: string
+  meaning: Mã loại giao dịch theo biểu mẫu 4 (P mua, S bán, A trao thưởng…).
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: securitiesOwned
+  type: number
+  meaning: Số cổ phiếu người nội bộ còn nắm giữ sau giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: reportingName
+  type: string
+  meaning: Tên cá nhân nội bộ thực hiện giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: typeOfOwner
+  type: string
+  meaning: Chức vụ của người nội bộ (CEO, giám đốc, cổ đông lớn…).
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: acquisitionOrDisposition
+  type: string
+  meaning: Cờ phân biệt mua vào (A) với bán ra (D).
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: directOrIndirect
+  type: string
+  meaning: 'Hình thức sở hữu: trực tiếp hay gián tiếp qua tổ chức trung gian.'
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: formType
+  type: string
+  meaning: Loại biểu mẫu SEC của hồ sơ.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: securitiesTransacted
+  type: number
+  meaning: Số cổ phiếu trong giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: price
+  type: number
+  meaning: Giá thực hiện của giao dịch nội bộ.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: securityName
+  type: string
+  meaning: Tên loại chứng khoán được giao dịch.
+- api: Search Insider Trades
+  endpoint: /insider-trading/search
+  field: url
+  type: string
+  meaning: URL tới tài liệu gốc trên SEC EDGAR.
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: name
+  type: string
+  meaning: Tên của đối tượng được trả về (công ty, quỹ, chỉ số… tuỳ endpoint).
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: sicCode
+  type: string
+  meaning: Mã ngành SIC do SEC cấp.
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: industryTitle
+  type: string
+  meaning: Tên ngành theo hệ phân loại SIC.
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: businessAddress
+  type: string
+  meaning: Địa chỉ trụ sở kinh doanh đăng ký với SEC.
+- api: All Industry Classification
+  endpoint: /all-industry-classification
+  field: phoneNumber
+  type: string
+  meaning: Số điện thoại đăng ký với SEC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: registrantName
+  type: string
+  meaning: Tên pháp nhân đăng ký với SEC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: sicCode
+  type: string
+  meaning: Mã ngành SIC do SEC cấp.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: sicDescription
+  type: string
+  meaning: Diễn giải mã ngành SIC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: sicGroup
+  type: string
+  meaning: Nhóm ngành cấp trên trong hệ SIC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: isin
+  type: string
+  meaning: International Securities Identification Number — mã định danh chứng khoán
+    chuẩn ISO 6166.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: businessAddress
+  type: string
+  meaning: Địa chỉ trụ sở kinh doanh đăng ký với SEC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: mailingAddress
+  type: string
+  meaning: Địa chỉ nhận thư đăng ký với SEC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: phoneNumber
+  type: string
+  meaning: Số điện thoại đăng ký với SEC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: postalCode
+  type: string
+  meaning: Mã bưu chính đăng ký với SEC.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: city
+  type: string
+  meaning: Thành phố.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: state
+  type: string
+  meaning: Bang hoặc tỉnh.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: country
+  type: string
+  meaning: Mã hoặc tên quốc gia.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: description
+  type: string
+  meaning: Mô tả hoạt động kinh doanh của công ty dưới dạng văn bản tự do.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: ceo
+  type: string
+  meaning: Tên tổng giám đốc đương nhiệm.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: website
+  type: string
+  meaning: Địa chỉ website của công ty.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: exchange
+  type: string
+  meaning: Mã sàn nơi công cụ được niêm yết (vd NASDAQ, NYSE).
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: stateLocation
+  type: string
+  meaning: Bang nơi công ty đặt trụ sở thực tế.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: stateOfIncorporation
+  type: string
+  meaning: Bang nơi công ty được thành lập về mặt pháp lý.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: fiscalYearEnd
+  type: string
+  meaning: Ngày kết thúc năm tài chính, dạng tháng-ngày.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: ipoDate
+  type: string
+  meaning: Ngày cổ phiếu bắt đầu giao dịch lần đầu.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: secFilingsUrl
+  type: string
+  meaning: URL tới trang hồ sơ của công ty trên SEC EDGAR.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: taxIdentificationNumber
+  type: string
+  meaning: Mã số thuế do cơ quan thuế Mỹ cấp.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: fiftyTwoWeekRange
+  type: string
+  meaning: Khoảng giá 52 tuần, dạng chuỗi.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: isActive
+  type: boolean
+  meaning: Cờ cho biết pháp nhân còn hoạt động tại thời điểm gọi API hay không.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: assetType
+  type: string
+  meaning: Loại tài sản.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: openFigiComposite
+  type: string
+  meaning: Mã định danh công cụ tài chính theo chuẩn OpenFIGI.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: priceCurrency
+  type: string
+  meaning: Đơn vị tiền tệ của giá niêm yết.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: marketSector
+  type: string
+  meaning: Nhóm thị trường của công cụ theo phân loại của nhà cung cấp.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: securityType
+  type: ''
+  meaning: Loại chứng khoán (cổ phiếu phổ thông, ADR, quỹ…).
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: isEtf
+  type: boolean
+  meaning: Cờ cho biết công cụ này là quỹ ETF.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: isAdr
+  type: boolean
+  meaning: Cờ cho biết đây là chứng chỉ lưu ký của công ty nước ngoài.
+- api: SEC Company Full Profile
+  endpoint: /sec-profile
+  field: isFund
+  type: boolean
+  meaning: Cờ cho biết công cụ này là quỹ đầu tư.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: date
+  type: string
+  meaning: Ngày kết thúc kỳ báo cáo.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: reportedCurrency
+  type: string
+  meaning: Đơn vị tiền tệ mà công ty dùng khi lập báo cáo tài chính.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: filingDate
+  type: string
+  meaning: Ngày hồ sơ được nộp lên SEC — thời điểm thị trường BẮT ĐẦU biết thông tin.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: acceptedDate
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giờ phút).
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: fiscalYear
+  type: string
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: cashAndCashEquivalents
+  type: number
+  meaning: Tiền và các khoản tương đương tiền.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: shortTermInvestments
+  type: number
+  meaning: Đầu tư tài chính ngắn hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: netReceivables
+  type: number
+  meaning: Các khoản phải thu thuần.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: accountsReceivables
+  type: number
+  meaning: Phải thu khách hàng.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherReceivables
+  type: number
+  meaning: Các khoản phải thu khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: inventory
+  type: number
+  meaning: Hàng tồn kho.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: prepaids
+  type: number
+  meaning: Chi phí trả trước.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherCurrentAssets
+  type: number
+  meaning: Tài sản ngắn hạn khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: propertyPlantEquipmentNet
+  type: number
+  meaning: Tài sản cố định hữu hình thuần (đã trừ khấu hao luỹ kế).
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: goodwill
+  type: number
+  meaning: Lợi thế thương mại từ các thương vụ mua lại.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: intangibleAssets
+  type: number
+  meaning: Tài sản vô hình ngoài lợi thế thương mại.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: longTermInvestments
+  type: number
+  meaning: Đầu tư tài chính dài hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: taxAssets
+  type: number
+  meaning: Tài sản thuế thu nhập hoãn lại.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherNonCurrentAssets
+  type: number
+  meaning: Tài sản dài hạn khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherAssets
+  type: number
+  meaning: Tài sản khác chưa phân loại.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: accountPayables
+  type: number
+  meaning: Phải trả người bán.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherPayables
+  type: number
+  meaning: Các khoản phải trả khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: accruedExpenses
+  type: number
+  meaning: Chi phí phải trả đã phát sinh nhưng chưa thanh toán.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: shortTermDebt
+  type: number
+  meaning: Nợ vay ngắn hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: capitalLeaseObligationsCurrent
+  type: number
+  meaning: Nghĩa vụ thuê tài chính đến hạn trong một năm.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: taxPayables
+  type: number
+  meaning: Thuế phải nộp.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: deferredRevenue
+  type: number
+  meaning: Doanh thu chưa thực hiện, phần ngắn hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherCurrentLiabilities
+  type: number
+  meaning: Nợ ngắn hạn khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: longTermDebt
+  type: number
+  meaning: Nợ vay dài hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: deferredRevenueNonCurrent
+  type: number
+  meaning: Doanh thu chưa thực hiện, phần dài hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: deferredTaxLiabilitiesNonCurrent
+  type: number
+  meaning: Thuế thu nhập hoãn lại phải trả, dài hạn.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherNonCurrentLiabilities
+  type: number
+  meaning: Nợ dài hạn khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherLiabilities
+  type: number
+  meaning: Nợ phải trả khác chưa phân loại.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: capitalLeaseObligations
+  type: number
+  meaning: Tổng nghĩa vụ thuê tài chính.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: treasuryStock
+  type: number
+  meaning: Cổ phiếu quỹ — ghi âm trong vốn chủ sở hữu.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: preferredStock
+  type: number
+  meaning: Vốn cổ phần ưu đãi.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: commonStock
+  type: number
+  meaning: Vốn cổ phần phổ thông theo mệnh giá.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: retainedEarnings
+  type: number
+  meaning: Lợi nhuận giữ lại luỹ kế — âm là dấu hiệu lỗ luỹ kế.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: additionalPaidInCapital
+  type: number
+  meaning: Thặng dư vốn cổ phần.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: accumulatedOtherComprehensiveIncomeLoss
+  type: number
+  meaning: Thu nhập toàn diện khác luỹ kế.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: otherTotalStockholdersEquity
+  type: number
+  meaning: Các thành phần vốn chủ sở hữu khác.
+- api: Balance Sheet Statement
+  endpoint: /balance-sheet-statement
+  field: minorityInterest
+  type: number
+  meaning: Lợi ích cổ đông không kiểm soát.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: date
+  type: string
+  meaning: Ngày kết thúc kỳ báo cáo.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: reportedCurrency
+  type: string
+  meaning: Đơn vị tiền tệ mà công ty dùng khi lập báo cáo tài chính.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: filingDate
+  type: string
+  meaning: Ngày hồ sơ được nộp lên SEC — thời điểm thị trường BẮT ĐẦU biết thông tin.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: acceptedDate
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giờ phút).
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: fiscalYear
+  type: string
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: netIncome
+  type: number
+  meaning: Lợi nhuận sau thuế — điểm xuất phát của phương pháp gián tiếp lập báo cáo
+    lưu chuyển tiền tệ.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: depreciationAndAmortization
+  type: number
+  meaning: Khấu hao cộng ngược vào lợi nhuận vì là chi phí phi tiền mặt.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: deferredIncomeTax
+  type: number
+  meaning: Thuế thu nhập hoãn lại, điều chỉnh phi tiền mặt.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: stockBasedCompensation
+  type: number
+  meaning: Chi phí thù lao bằng cổ phiếu — phi tiền mặt nhưng gây pha loãng thật.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: changeInWorkingCapital
+  type: number
+  meaning: Thay đổi vốn lưu động thuần trong kỳ.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: accountsReceivables
+  type: number
+  meaning: Thay đổi khoản phải thu trong kỳ (tăng phải thu làm giảm tiền).
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: inventory
+  type: number
+  meaning: Thay đổi hàng tồn kho trong kỳ (tăng tồn kho làm giảm tiền).
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: accountsPayables
+  type: number
+  meaning: Thay đổi khoản phải trả người bán trong kỳ.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: otherWorkingCapital
+  type: number
+  meaning: Thay đổi các khoản vốn lưu động khác.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: otherNonCashItems
+  type: number
+  meaning: Các khoản điều chỉnh phi tiền mặt khác.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: investmentsInPropertyPlantAndEquipment
+  type: number
+  meaning: Chi đầu tư tài sản cố định (ghi âm).
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: acquisitionsNet
+  type: number
+  meaning: Chi mua lại doanh nghiệp, thuần.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: purchasesOfInvestments
+  type: number
+  meaning: Chi mua các khoản đầu tư tài chính.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: salesMaturitiesOfInvestments
+  type: number
+  meaning: Thu từ bán và đáo hạn các khoản đầu tư.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: otherInvestingActivities
+  type: number
+  meaning: Các hoạt động đầu tư khác.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: netCashProvidedByInvestingActivities
+  type: number
+  meaning: Dòng tiền thuần từ hoạt động đầu tư.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: longTermNetDebtIssuance
+  type: number
+  meaning: Phát hành nợ dài hạn thuần.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: shortTermNetDebtIssuance
+  type: number
+  meaning: Phát hành nợ ngắn hạn thuần.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: commonStockIssuance
+  type: number
+  meaning: Thu từ phát hành cổ phiếu phổ thông.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: commonStockRepurchased
+  type: number
+  meaning: Chi mua lại cổ phiếu phổ thông (ghi âm) — tín hiệu lợi suất cổ đông.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: netPreferredStockIssuance
+  type: number
+  meaning: Phát hành cổ phiếu ưu đãi thuần.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: commonDividendsPaid
+  type: number
+  meaning: Cổ tức trả cho cổ đông phổ thông.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: preferredDividendsPaid
+  type: number
+  meaning: Cổ tức trả cho cổ đông ưu đãi.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: otherFinancingActivities
+  type: number
+  meaning: Các hoạt động tài chính khác.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: netCashProvidedByFinancingActivities
+  type: number
+  meaning: Dòng tiền thuần từ hoạt động tài chính.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: effectOfForexChangesOnCash
+  type: number
+  meaning: Ảnh hưởng của chênh lệch tỷ giá lên số dư tiền.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: cashAtBeginningOfPeriod
+  type: number
+  meaning: Số dư tiền đầu kỳ.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: operatingCashFlow
+  type: number
+  meaning: Dòng tiền từ hoạt động kinh doanh (bản rút gọn).
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: capitalExpenditure
+  type: number
+  meaning: Chi đầu tư tài sản cố định.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: incomeTaxesPaid
+  type: number
+  meaning: Thuế thu nhập đã nộp bằng tiền.
+- api: Cash Flow Statement
+  endpoint: /cash-flow-statement
+  field: interestPaid
+  type: number
+  meaning: Lãi vay đã trả bằng tiền.
+- api: Enterprise Values
+  endpoint: /enterprise-values
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Enterprise Values
+  endpoint: /enterprise-values
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Enterprise Values
+  endpoint: /enterprise-values
+  field: stockPrice
+  type: number
+  meaning: Giá cổ phiếu dùng để tính vốn hoá trong bản ghi này.
+- api: Enterprise Values
+  endpoint: /enterprise-values
+  field: numberOfShares
+  type: number
+  meaning: Số cổ phiếu lưu hành dùng để tính vốn hoá.
+- api: Enterprise Values
+  endpoint: /enterprise-values
+  field: minusCashAndCashEquivalents
+  type: number
+  meaning: Tiền và tương đương tiền bị trừ khi tính giá trị doanh nghiệp.
+- api: Enterprise Values
+  endpoint: /enterprise-values
+  field: addTotalDebt
+  type: number
+  meaning: Tổng nợ vay được cộng vào khi tính giá trị doanh nghiệp.
+- api: Financial Ratios
+  endpoint: /ratios
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Financial Ratios
+  endpoint: /ratios
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Financial Ratios
+  endpoint: /ratios
+  field: fiscalYear
+  type: string
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Financial Ratios
+  endpoint: /ratios
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Financial Ratios
+  endpoint: /ratios
+  field: reportedCurrency
+  type: string
+  meaning: Đơn vị tiền tệ mà công ty dùng khi lập báo cáo tài chính.
+- api: Financial Ratios
+  endpoint: /ratios
+  field: priceToFairValue
+  type: number
+  meaning: Giá thị trường so với giá trị hợp lý do nhà cung cấp ước tính.
+- api: Financial Reports Dates
+  endpoint: /financial-reports-dates
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Financial Reports Dates
+  endpoint: /financial-reports-dates
+  field: fiscalYear
+  type: number
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Financial Reports Dates
+  endpoint: /financial-reports-dates
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Financial Reports Dates
+  endpoint: /financial-reports-dates
+  field: linkXlsx
+  type: string
+  meaning: URL tải bản 10-K định dạng Excel.
+- api: Financial Reports Dates
+  endpoint: /financial-reports-dates
+  field: linkJson
+  type: string
+  meaning: URL tải bản 10-K định dạng JSON.
+- api: Income Statement
+  endpoint: /income-statement
+  field: date
+  type: string
+  meaning: Ngày kết thúc kỳ báo cáo.
+- api: Income Statement
+  endpoint: /income-statement
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Income Statement
+  endpoint: /income-statement
+  field: reportedCurrency
+  type: string
+  meaning: Đơn vị tiền tệ mà công ty dùng khi lập báo cáo tài chính.
+- api: Income Statement
+  endpoint: /income-statement
+  field: cik
+  type: string
+  meaning: Central Index Key — định danh pháp nhân do SEC cấp, duy nhất và không đổi
+    theo thời gian.
+- api: Income Statement
+  endpoint: /income-statement
+  field: filingDate
+  type: string
+  meaning: Ngày hồ sơ được nộp lên SEC — thời điểm thị trường BẮT ĐẦU biết thông tin.
+- api: Income Statement
+  endpoint: /income-statement
+  field: acceptedDate
+  type: string
+  meaning: Thời điểm SEC chấp nhận hồ sơ (chính xác tới giờ phút).
+- api: Income Statement
+  endpoint: /income-statement
+  field: fiscalYear
+  type: string
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Income Statement
+  endpoint: /income-statement
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Income Statement
+  endpoint: /income-statement
+  field: revenue
+  type: number
+  meaning: Doanh thu thuần từ hoạt động kinh doanh chính trong kỳ.
+- api: Income Statement
+  endpoint: /income-statement
+  field: costOfRevenue
+  type: number
+  meaning: Giá vốn hàng bán — chi phí trực tiếp tạo ra doanh thu.
+- api: Income Statement
+  endpoint: /income-statement
+  field: researchAndDevelopmentExpenses
+  type: number
+  meaning: Chi phí nghiên cứu và phát triển.
+- api: Income Statement
+  endpoint: /income-statement
+  field: generalAndAdministrativeExpenses
+  type: number
+  meaning: Chi phí quản lý doanh nghiệp.
+- api: Income Statement
+  endpoint: /income-statement
+  field: sellingAndMarketingExpenses
+  type: number
+  meaning: Chi phí bán hàng và tiếp thị.
+- api: Income Statement
+  endpoint: /income-statement
+  field: sellingGeneralAndAdministrativeExpenses
+  type: number
+  meaning: Tổng chi phí bán hàng và quản lý (SG&A).
+- api: Income Statement
+  endpoint: /income-statement
+  field: otherExpenses
+  type: number
+  meaning: Các chi phí hoạt động khác không thuộc nhóm đã liệt kê.
+- api: Income Statement
+  endpoint: /income-statement
+  field: interestIncome
+  type: number
+  meaning: Thu nhập từ lãi.
+- api: Income Statement
+  endpoint: /income-statement
+  field: interestExpense
+  type: number
+  meaning: Chi phí lãi vay — mẫu số của hệ số khả năng trả lãi.
+- api: Income Statement
+  endpoint: /income-statement
+  field: depreciationAndAmortization
+  type: number
+  meaning: Khấu hao tài sản hữu hình và vô hình.
+- api: Income Statement
+  endpoint: /income-statement
+  field: nonOperatingIncomeExcludingInterest
+  type: number
+  meaning: Thu nhập ngoài hoạt động kinh doanh, không tính lãi.
+- api: Income Statement
+  endpoint: /income-statement
+  field: incomeBeforeTax
+  type: number
+  meaning: Lợi nhuận trước thuế.
+- api: Income Statement
+  endpoint: /income-statement
+  field: incomeTaxExpense
+  type: number
+  meaning: Chi phí thuế thu nhập doanh nghiệp.
+- api: Income Statement
+  endpoint: /income-statement
+  field: netIncomeFromDiscontinuedOperations
+  type: number
+  meaning: Lợi nhuận từ hoạt động đã ngừng.
+- api: Income Statement
+  endpoint: /income-statement
+  field: otherAdjustmentsToNetIncome
+  type: number
+  meaning: Các điều chỉnh khác vào lợi nhuận thuần.
+- api: Income Statement
+  endpoint: /income-statement
+  field: netIncome
+  type: number
+  meaning: Lợi nhuận sau thuế thuộc về cổ đông — tử số của ROE, ROA, P/E.
+- api: Income Statement
+  endpoint: /income-statement
+  field: netIncomeDeductions
+  type: number
+  meaning: Các khoản giảm trừ khỏi lợi nhuận thuần (vd cổ tức ưu đãi).
+- api: Income Statement
+  endpoint: /income-statement
+  field: weightedAverageShsOut
+  type: number
+  meaning: Số cổ phiếu lưu hành bình quân gia quyền trong kỳ.
+- api: Income Statement
+  endpoint: /income-statement
+  field: weightedAverageShsOutDil
+  type: number
+  meaning: Số cổ phiếu bình quân gia quyền pha loãng hoàn toàn.
+- api: Owner Earnings
+  endpoint: /owner-earnings
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Owner Earnings
+  endpoint: /owner-earnings
+  field: reportedCurrency
+  type: string
+  meaning: Đơn vị tiền tệ mà công ty dùng khi lập báo cáo tài chính.
+- api: Owner Earnings
+  endpoint: /owner-earnings
+  field: fiscalYear
+  type: string
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Owner Earnings
+  endpoint: /owner-earnings
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Owner Earnings
+  endpoint: /owner-earnings
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Owner Earnings
+  endpoint: /owner-earnings
+  field: maintenanceCapex
+  type: number
+  meaning: Chi đầu tư duy trì — phần capex chỉ để giữ nguyên năng lực sản xuất.
+- api: Revenue Geographic Segments
+  endpoint: /revenue-geographic-segmentation
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Revenue Geographic Segments
+  endpoint: /revenue-geographic-segmentation
+  field: fiscalYear
+  type: number
+  meaning: Năm tài chính của kỳ báo cáo (có thể lệch năm dương lịch).
+- api: Revenue Geographic Segments
+  endpoint: /revenue-geographic-segmentation
+  field: period
+  type: string
+  meaning: 'Kỳ báo cáo: FY (năm tài chính) hoặc Q1/Q2/Q3/Q4.'
+- api: Revenue Geographic Segments
+  endpoint: /revenue-geographic-segmentation
+  field: reportedCurrency
+  type: ''
+  meaning: Đơn vị tiền tệ mà công ty dùng khi lập báo cáo tài chính.
+- api: Revenue Geographic Segments
+  endpoint: /revenue-geographic-segmentation
+  field: date
+  type: string
+  meaning: Ngày của bản ghi — ý nghĩa cụ thể phụ thuộc endpoint (ngày giao dịch, ngày
+    kỳ báo cáo, ngày sự kiện).
+- api: Revenue Geographic Segments
+  endpoint: /revenue-geographic-segmentation
+  field: data.Americas Segment
+  type: integer
+  meaning: Doanh thu theo khu vực địa lý (tên khu vực do doanh nghiệp tự đặt)
+- api: Price Target Consensus
+  endpoint: /price-target-consensus
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Price Target Consensus
+  endpoint: /price-target-consensus
+  field: targetHigh
+  type: number
+  meaning: Giá mục tiêu cao nhất do giới phân tích dự báo.
+- api: Price Target Consensus
+  endpoint: /price-target-consensus
+  field: targetLow
+  type: number
+  meaning: Giá mục tiêu thấp nhất do giới phân tích dự báo.
+- api: Price Target Consensus
+  endpoint: /price-target-consensus
+  field: targetConsensus
+  type: number
+  meaning: Giá mục tiêu đồng thuận (trung bình) của giới phân tích.
+- api: Price Target Consensus
+  endpoint: /price-target-consensus
+  field: targetMedian
+  type: number
+  meaning: Giá mục tiêu trung vị của giới phân tích.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: symbol
+  type: string
+  meaning: Mã giao dịch (ticker) của công cụ tài chính trên sàn niêm yết.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: lastMonthCount
+  type: integer
+  meaning: Số lượng dự báo giá mục tiêu trong tháng gần nhất.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: lastMonthAvgPriceTarget
+  type: number
+  meaning: Giá mục tiêu trung bình trong tháng gần nhất.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: lastQuarterCount
+  type: integer
+  meaning: Số lượng dự báo giá mục tiêu trong quý gần nhất.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: lastQuarterAvgPriceTarget
+  type: number
+  meaning: Giá mục tiêu trung bình trong quý gần nhất.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: lastYearCount
+  type: integer
+  meaning: Số lượng dự báo giá mục tiêu trong năm gần nhất.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: lastYearAvgPriceTarget
+  type: number
+  meaning: Giá mục tiêu trung bình trong năm gần nhất.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: allTimeCount
+  type: integer
+  meaning: Tổng số dự báo giá mục tiêu tính từ trước tới nay.
+- api: Price Target Summary
+  endpoint: /price-target-summary
+  field: allTimeAvgPriceTarget
+  type: number
+  meaning: Giá mục tiêu trung bình tính từ trước tới nay.

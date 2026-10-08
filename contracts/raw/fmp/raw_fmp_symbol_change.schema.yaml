@@ -1,0 +1,60 @@
+dataset: raw_fmp_symbol_change
+layer: raw
+source: fmp
+source_endpoint: symbol_change
+target_table: lakehouse.raw.raw_fmp_symbol_change
+grain: one row per ticker symbol change event
+payload:
+  root: payload
+  explode: true
+columns:
+- name: old_symbol
+  source: oldSymbol
+  type: string
+  nullable: false
+- name: new_symbol
+  source: newSymbol
+  type: string
+  nullable: false
+- name: change_date
+  source: date
+  type: date
+  nullable: false
+- name: company_name
+  source: companyName
+  type: string
+  nullable: true
+metadata_columns:
+- name: source
+  type: string
+  nullable: false
+- name: source_endpoint
+  type: string
+  nullable: false
+- name: run_date
+  type: date
+  nullable: false
+- name: partition_key
+  type: string
+  nullable: false
+- name: requested_at
+  type: timestamp
+  nullable: false
+- name: response_status
+  type: integer
+  nullable: false
+- name: landing_key
+  type: string
+  nullable: false
+- name: ingested_at
+  type: timestamp
+  nullable: false
+primary_key:
+- old_symbol
+- new_symbol
+- change_date
+- run_date
+- landing_key
+quality_rules:
+- response_status should be 200 for rows loaded into raw
+- landing_key should identify the raw landing object used to create each row

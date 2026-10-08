@@ -1,0 +1,10 @@
+area_code: lo
+concepts:
+  - name: Country
+    grain: dimension
+    description: Quốc gia đăng ký của pháp nhân hoặc quốc gia của một chuỗi vĩ mô.
+    source_endpoints: [/available-countries, /economic-calendar]
+  - name: Exchange Venue
+    grain: dimension
+    description: Sàn giao dịch như một nơi chốn (quyết định Q4 — không phải vai trò pháp nhân).
+    source_endpoints: [/delisted-companies, /index-list, /ipos-calendar, /profile, /sec-profile]

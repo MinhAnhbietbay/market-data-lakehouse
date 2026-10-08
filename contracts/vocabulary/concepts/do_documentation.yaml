@@ -1,0 +1,12 @@
+area_code: do
+concepts:
+  - name: SEC Filing
+    grain: event
+    description: >
+      Một hồ sơ nộp lên SEC, có ngày nộp, thời điểm chấp nhận, loại biểu mẫu và URL gốc.
+      Là nguồn known_from_date cho mọi concept có độ trễ công bố.
+    source_endpoints: [/acquisition-of-beneficial-ownership, /balance-sheet-statement, /cash-flow-statement, /historical-employee-count, /income-statement, /insider-trading/search, /ipos-disclosure, /mergers-acquisitions-search, /sec-profile]
+  - name: Financial Report Document
+    grain: period_fact
+    description: Bản 10-K dạng tệp tải về, gắn với một kỳ báo cáo.
+    source_endpoints: [/financial-reports-dates]

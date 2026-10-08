@@ -1,0 +1,33 @@
+version: 1
+source_spec: docs/superpowers/specs/2026-08-10-concept-model-44-api-design.md
+areas:
+  - {code: ip, name: Involved Party, status: active}
+  - {code: pd, name: Product, status: active}
+  - {code: ar, name: Arrangement, status: active}
+  - {code: tx, name: Transaction, status: active}
+  - {code: ev, name: Event, status: active}
+  - {code: ac, name: Accounting, status: active}
+  - {code: bd, name: Business Direction, status: active}
+  - {code: gr, name: Group, status: active}
+  - {code: cm, name: Common, status: active}
+  - {code: lo, name: Location, status: active}
+  - {code: do, name: Documentation, status: active}
+  - {code: pr, name: Property, status: active}
+  - code: ba
+    name: Business Activity
+    status: empty
+    empty_reason: >
+      Cả hai concept (Valuation Method, Technical Indicator Method) đều 0 field trong 44 API.
+      Area bị xoá khỏi mô hình ở spec 2026-08-10 §5.2.
+  - code: cn
+    name: Communication
+    status: empty
+    empty_reason: >
+      Rỗng có chủ đích từ P1. Tin tức và bản ghi hội nghị đã loại ở luật R4;
+      Analyst Recommendation đặt ở bd theo quyết định Q3.
+  - code: cd
+    name: Condition
+    status: empty
+    empty_reason: >
+      Rỗng có chủ đích từ P1. Trading/Listing Status bị bác bằng luật N3;
+      lãi suất kho bạc về cm/Macro Series vì dự án không có thoả thuận nào để nó bám vào.

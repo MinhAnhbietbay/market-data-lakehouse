@@ -1,0 +1,59 @@
+dataset: raw_api_payload
+layer: landing
+format: json
+target_path: s3://lakehouse/landing/{source}/{endpoint}/dt={run_date}/{partition_key}.json
+grain: one raw API response per source endpoint request
+evolution_policy: append-only raw payloads; do not rewrite historical landing objects
+
+columns:
+  - name: source
+    type: string
+    nullable: false
+    description: Source key from configs/sources/data_sources.yaml, for example fmp or fred.
+
+  - name: endpoint
+    type: string
+    nullable: false
+    description: Endpoint key from configs/sources/data_sources.yaml, for example profile or ohlcv_non_split_adjusted.
+
+  - name: run_date
+    type: date
+    nullable: false
+    description: Pipeline run date used as the landing partition.
+
+  - name: partition_key
+    type: string
+    nullable: false
+    description: Rendered landing partition key, for example AAPL, GSPC, all, or page-0.
+
+  - name: requested_at
+    type: timestamp
+    nullable: false
+    description: UTC timestamp when the request was executed.
+
+  - name: request_url
+    type: string
+    nullable: false
+    description: Request URL with secret query parameters masked.
+
+  - name: request_params
+    type: json
+    nullable: false
+    description: Rendered request params with secrets masked.
+
+  - name: response_status
+    type: integer
+    nullable: false
+    description: HTTP response status code returned by the source API.
+
+  - name: payload
+    type: json
+    nullable: false
+    description: Raw JSON response body. For HTTP errors, this stores the vendor error payload when available.
+
+quality_rules:
+  - source must exist in configs/sources/data_sources.yaml.
+  - endpoint must exist under the selected source in configs/sources/data_sources.yaml.
+  - response_status must be between 100 and 599.
+  - request_url and request_params must not expose API keys or secrets.
+  - landing objects are append-only and partitioned by run_date.

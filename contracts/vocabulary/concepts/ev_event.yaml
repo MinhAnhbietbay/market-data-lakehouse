@@ -1,0 +1,38 @@
+area_code: ev
+concepts:
+  - name: Stock Split
+    grain: event
+    description: Chia tách hoặc gộp cổ phiếu, biểu diễn bằng tỷ lệ numerator/denominator tại ex-date.
+    source_endpoints: [/splits]
+  - name: Cash Dividend
+    grain: event
+    description: Khoản chi trả tiền mặt cho người nắm giữ, có ex-date, ngày chốt và ngày chi trả.
+    source_endpoints: [/dividends]
+  - name: Merger Acquisition
+    grain: event
+    description: Một pháp nhân thâu tóm hoặc sáp nhập với pháp nhân khác.
+    source_endpoints: [/mergers-acquisitions-search]
+  - name: Delisting Event
+    grain: event
+    description: >
+      Việc một Listing chấm dứt giao dịch tại một ngày. Tồn tại vì luật N3 — tư cách universe
+      tại ngày t suy từ ipoDate <= t < delistedDate, không bao giờ từ cờ trạng thái.
+    source_endpoints: [/delisted-companies]
+  - name: Symbol Change Event
+    grain: event
+    description: Mã giao dịch của một Listing đổi giá trị tại một ngày. Cần để nối chuỗi giá dài hạn qua các lần đổi ticker.
+    source_endpoints: [/symbol-change]
+  - name: IPO Event
+    grain: event
+    description: Chứng khoán lần đầu chào bán ra công chúng. Cận dưới khoảng hiệu lực của Listing.
+    source_endpoints: [/ipos-calendar, /ipos-disclosure]
+  - name: Earnings Announcement
+    grain: event
+    description: >
+      Việc công bố kết quả kinh doanh một kỳ. Nguồn known_from_date chuẩn nhất cho
+      Income Statement, Balance Sheet Statement, Cash Flow Statement.
+    source_endpoints: [/earnings]
+  - name: Economic Data Release
+    grain: event
+    description: Việc một cơ quan công bố số liệu vĩ mô, kèm giá trị thực tế, dự báo và kỳ trước.
+    source_endpoints: [/economic-calendar]

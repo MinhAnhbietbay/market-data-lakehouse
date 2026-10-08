@@ -1,0 +1,14 @@
+area_code: gr
+concepts:
+  - name: Sector
+    grain: dimension
+    description: Phân ngành cấp 1 theo cách phân loại của FMP.
+    source_endpoints: [/available-sectors, /sp500-constituent, /profile]
+  - name: Industry
+    grain: dimension
+    description: Phân ngành cấp 2 theo cách phân loại của FMP.
+    source_endpoints: [/available-industries, /profile]
+  - name: Security Rating
+    grain: daily_fact
+    description: Xếp hạng tổng hợp do FMP tính cho một mã tại một ngày, kèm các điểm thành phần.
+    source_endpoints: [/ratings-historical]

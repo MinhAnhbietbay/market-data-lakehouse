@@ -1,0 +1,12 @@
+area_code: ar
+concepts:
+  - name: Listing
+    grain: dimension
+    description: >
+      Việc một chứng khoán được niêm yết trên một sàn, có hiệu lực từ ipoDate đến delistedDate.
+      symbol là khoá của Listing, KHÔNG phải khoá của pháp nhân (luật N1).
+    source_endpoints: [/acquisition-of-beneficial-ownership, /all-industry-classification, /analyst-estimates, /balance-sheet-statement, /cash-flow-statement, /delisted-companies, /dividends, /sp500-constituent, /earnings, /enterprise-values, /financial-reports-dates, /financial-statement-symbol-list, /grades, /grades-historical, /historical-sp500-constituent, /historical-employee-count, /historical-market-capitalization, /historical-price-eod/non-split-adjusted, /income-statement, /index-list, /insider-trading/search, /insider-trading/statistics, /ipos-calendar, /ipos-disclosure, /mergers-acquisitions-search, /owner-earnings, /profile, /ratings-historical, /ratios, /revenue-geographic-segmentation, /sec-profile, /shares-float, /splits]
+  - name: Index Membership
+    grain: dimension
+    description: Tư cách thành viên của một mã trong một rổ chỉ số, có khoảng hiệu lực.
+    source_endpoints: [/sp500-constituent, /historical-sp500-constituent]

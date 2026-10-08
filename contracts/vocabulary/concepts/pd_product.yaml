@@ -1,0 +1,18 @@
+area_code: pd
+concepts:
+  - name: Security
+    grain: dimension
+    description: >
+      Công cụ tài chính được chào bán, định danh bằng isin/cusip. Cổ phiếu phổ thông, ADR
+      và chứng chỉ quỹ dùng CHUNG bảng này, phân biệt bằng cột securityType/isEtf/isAdr/isFund.
+    source_endpoints: [/profile, /sec-profile]
+  - name: Market Index
+    grain: dimension
+    description: Rổ chỉ số thị trường như một công cụ có mã và sàn niêm yết.
+    source_endpoints: [/index-list]
+  - name: Share Count Observation
+    grain: daily_fact
+    description: >
+      Số cổ phiếu lưu hành và số cổ phiếu tự do chuyển nhượng tại một ngày.
+      Là đầu vào bắt buộc để tính vốn hoá (quyết định Q5).
+    source_endpoints: [/shares-float]

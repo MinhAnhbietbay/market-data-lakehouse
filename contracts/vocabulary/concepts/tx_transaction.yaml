@@ -1,0 +1,16 @@
+area_code: tx
+concepts:
+  - name: Daily Price Bar
+    grain: daily_fact
+    description: Giá mở/cao/thấp/đóng và khối lượng của một mã trong một phiên, chưa điều chỉnh chia tách.
+    source_endpoints: [/historical-price-eod/non-split-adjusted]
+  - name: Insider Transaction
+    grain: event
+    description: Một lần mua hoặc bán của người nội bộ, khai báo qua biểu mẫu 4.
+    source_endpoints: [/insider-trading-transaction-type, /insider-trading/search, /insider-trading/statistics]
+  - name: Market Cap Observation
+    grain: daily_fact
+    description: >
+      Vốn hoá thị trường do FMP quan sát được tại một ngày. Là SỐ ĐÃ LƯU, khác với
+      vốn hoá ta tự tính (measure ở curated) — quyết định D6 của spec.
+    source_endpoints: [/historical-market-capitalization]
