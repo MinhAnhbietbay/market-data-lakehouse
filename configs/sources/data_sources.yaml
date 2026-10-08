@@ -1,0 +1,832 @@
+version: 1
+
+defaults:
+  request:
+    timeout_seconds: 30
+    # Dùng bởi ingest.fetch_with_retry (trước 2026-09-30 hai khoá này là config chết).
+    max_retries: 3
+    retry_backoff_factor: 2
+    # 429 = vượt trần theo phút HOẶC hết quota ngày (cùng body "Limit Reach"): chờ trọn 1 phút.
+    rate_limit_backoff_seconds: 60
+  landing:
+    bucket: lakehouse
+    prefix: landing
+    object_template: "{prefix}/{source}/{endpoint}/dt={run_date}/{partition_key}.json"
+
+metadata_conventions:
+  availability_values: [free_tested, paid_required, unknown, free_public]
+  enabled_values: [true, false]
+  scope_values: [per_symbol, per_group, reference, paged_reference, market_wide, macro_series, batch]
+  note: >
+    availability is operational metadata for the current project/API key, not a permanent
+    statement about the vendor. Endpoints can move between plans, so re-test when API plan changes.
+
+sources:
+  openfigi:
+    display_name: OpenFIGI (Bloomberg open symbology)
+    base_url: https://api.openfigi.com/v3
+    provider_type: reference_symbology
+    docs_url: https://www.openfigi.com/api/documentation
+    coverage_notes: >
+      Bộ phân giải định danh, KHÔNG phải nguồn universe -- kết quả không có trường
+      trạng thái active/delisted và trần liệt kê là 15.000/truy vấn. Danh sách symbol
+      vẫn lấy từ FMP.
+    auth:
+      type: header
+      header_name: X-OPENFIGI-APIKEY
+      env_var: OPEN_FIGI_API_KEY
+    rate_limit:
+      request_delay_seconds: 0.25
+      plan_calls_per_minute: 250
+    endpoints:
+      mapping:
+        path: /mapping
+        method: POST
+        scope: batch
+        batch_size: 100
+        domain: security_master
+        field_groups: [A10_reference_identifier]
+        grain: one row per input identifier per matched FIGI record
+        priority: critical
+        availability: free_tested
+        enabled: true
+        params: {}
+        landing: {partition_key: "batch={batch_index}"}
+
+  fmp:
+    display_name: Financial Modeling Prep
+    base_url: https://financialmodelingprep.com/stable
+    provider_type: market_data_api
+    docs_url: https://site.financialmodelingprep.com/developer/docs/stable
+    pricing_url: https://site.financialmodelingprep.com/pricing-plans
+    coverage_notes: Primary provider for US equity prices, corporate actions, fundamentals, analyst data, and basic reference data.
+
+    auth:
+      type: query_param
+      param_name: apikey
+      env_var: FMP_API_KEY
+
+    rate_limit:
+      # FMP Premium (mở 2026-09-30/10-01): 750 request/phút, 50 GB/30 ngày tính theo payload
+      # JSON compact. 0.09s ~ 666/phút -- chừa biên dưới 750 vì retry cũng là request. Limiter
+      # là theo PROCESS: chỉ đúng khi các lệnh FMP chạy TUẦN TỰ (ngày 1 chạy tay). DAG Airflow
+      # chạy song song 16 task -- phải có pool 1 slot (P1) trước khi bật lại DAG.
+      # Về gói free (250 request/ngày) thì đổi lại 0.5.
+      request_delay_seconds: 0.09
+      plan_calls_per_minute: 750
+      plan_bandwidth_gb_per_30d: 50
+
+    endpoints:
+      profile:
+        path: /profile
+        scope: per_symbol
+        domain: security_master
+        field_groups: [A8_sector_classification, A10_reference_identifier]
+        grain: one row per symbol profile snapshot
+        priority: critical
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      delisted_companies:
+        path: /delisted-companies
+        scope: paged_reference
+        domain: security_master
+        field_groups: [A10_reference_identifier]
+        grain: one row per delisted company
+        priority: high
+        availability: free_tested
+        enabled: true
+        params: {page: "{page}", limit: 100}
+        landing: {partition_key: "page-{page}"}
+
+      # Bước 1 của luồng universe (spec 2026-09-30 §2). enabled: false CÓ CHỦ Ý: chạy tay bằng
+      # --include-disabled, không có raw contract, không vào DAG. /stock-list không dùng được vì
+      # chỉ trả symbol+companyName, không có sàn.
+      company_screener_nasdaq:
+        path: /company-screener
+        scope: paged_reference
+        domain: security_master
+        field_groups: [A10_reference_identifier]
+        grain: one row per actively trading security on the exchange
+        priority: critical
+        availability: unknown
+        enabled: false
+        notes: "Chỉ cho bước dựng universe chạy tay; chưa có raw contract."
+        params: {exchange: NASDAQ, isEtf: "false", isFund: "false", isActivelyTrading: "true", page: "{page}", limit: 1000}
+        landing: {partition_key: "page-{page}"}
+
+      company_screener_nyse:
+        path: /company-screener
+        scope: paged_reference
+        domain: security_master
+        field_groups: [A10_reference_identifier]
+        grain: one row per actively trading security on the exchange
+        priority: critical
+        availability: unknown
+        enabled: false
+        notes: "Chỉ cho bước dựng universe chạy tay; chưa có raw contract."
+        params: {exchange: NYSE, isEtf: "false", isFund: "false", isActivelyTrading: "true", page: "{page}", limit: 1000}
+        landing: {partition_key: "page-{page}"}
+
+      shares_float:
+        path: /shares-float
+        scope: per_symbol
+        domain: security_master
+        field_groups: [A8_sector_classification]
+        grain: one row per symbol float snapshot
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      historical_market_cap:
+        path: /historical-market-capitalization
+        scope: per_symbol
+        domain: market
+        field_groups: [A1_price_volume]
+        grain: one row per symbol per trading date
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # Đo 2026-09-30: không gửi from/to thì FMP trả đúng 3 tháng (65 dòng) -- cắt im lặng.
+        row_cap: 5000
+        windows: {span: "-10y", split_every: "10y"}
+        params: {symbol: "{symbol}", from: "{from}", to: "{to}", limit: 5000}
+        landing: {partition_key: "{symbol}/{from}"}
+
+      ohlcv_non_split_adjusted:
+        path: /historical-price-eod/non-split-adjusted
+        scope: per_symbol
+        domain: market
+        field_groups: [A1_price_volume]
+        grain: one row per symbol per trading date
+        priority: critical
+        availability: free_tested
+        enabled: true
+        # F12/F12b/F9 (spec 2026-08-18): duy nhất còn lại trong 3 endpoint giá EOD --
+        # /full và /dividend-adjusted đã gỡ, chuẩn hoá split/cổ tức tính ở curated (D1).
+        # [t1, t2]: đây là dữ liệu lịch sử thuần tuý, không phải forward-looking (khác
+        # estimates/ratings/price targets) -- mã delisted vẫn cần giá quá khứ để backtest.
+        tiers: [t1, t2]
+        # Độ sâu chốt 10 năm (quyết định 2026-08-19), không phải 30: đủ cho cửa sổ
+        # IS 2019-2023 / OS 2024+ mà tốn ~1/3 băng thông. 10 năm ~ 2.520 phiên nên vừa
+        # một cửa sổ, dưới cap 5000 dòng/request của FMP (cap này cắt IM LẶNG, không
+        # báo lỗi). row_cap là lưới an toàn cho windows ở trên.
+        row_cap: 5000
+        windows: {span: "-10y", split_every: "10y"}
+        params: {symbol: "{symbol}", from: "{from}", to: "{to}"}
+        landing: {partition_key: "{symbol}/{from}"}
+
+      dividends:
+        path: /dividends
+        scope: per_symbol
+        domain: corporate_action
+        field_groups: [A5_corporate_events]
+        grain: one row per dividend event
+        priority: critical
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # Tài liệu ví dụ limit=100 -- REIT trả cổ tức tháng có 120 sự kiện/10 năm, vượt 100.
+        row_cap: 1000
+        params: {symbol: "{symbol}", limit: 1000}
+        landing: {partition_key: "{symbol}"}
+
+      splits:
+        path: /splits
+        scope: per_symbol
+        domain: corporate_action
+        field_groups: [A5_corporate_events]
+        grain: one row per split event
+        priority: critical
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # Tài liệu ví dụ limit=100 -- REIT trả cổ tức tháng có 120 sự kiện/10 năm, vượt 100.
+        row_cap: 1000
+        params: {symbol: "{symbol}", limit: 1000}
+        landing: {partition_key: "{symbol}"}
+
+      income_statement:
+        path: /income-statement
+        scope: per_symbol
+        domain: financial_statement
+        field_groups: [A2_income_statement]
+        grain: one row per symbol per fiscal period per statement type
+        priority: high
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # 60 quý = 15 năm: 10 năm backtest + TTM/YoY lookback. Gói free chỉ cho limit<=5.
+        params: {symbol: "{symbol}", period: quarter, limit: 60}
+        landing: {partition_key: "{symbol}"}
+
+      balance_sheet:
+        path: /balance-sheet-statement
+        scope: per_symbol
+        domain: financial_statement
+        field_groups: [A3_balance_sheet]
+        grain: one row per symbol per fiscal period per statement type
+        priority: high
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # 60 quý = 15 năm: 10 năm backtest + TTM/YoY lookback. Gói free chỉ cho limit<=5.
+        params: {symbol: "{symbol}", period: quarter, limit: 60}
+        landing: {partition_key: "{symbol}"}
+
+      cash_flow:
+        path: /cash-flow-statement
+        scope: per_symbol
+        domain: financial_statement
+        field_groups: [A4_cash_flow]
+        grain: one row per symbol per fiscal period per statement type
+        priority: high
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # 60 quý = 15 năm: 10 năm backtest + TTM/YoY lookback. Gói free chỉ cho limit<=5.
+        params: {symbol: "{symbol}", period: quarter, limit: 60}
+        landing: {partition_key: "{symbol}"}
+
+      ratios:
+        path: /ratios
+        scope: per_symbol
+        domain: financial_metric
+        field_groups: [B2_valuation, B3_profitability, B4_return_on_capital, B5_leverage, B6_liquidity]
+        grain: one row per symbol per fiscal period
+        priority: low
+        availability: paid_required
+        enabled: false
+        tiers: [t1, t2]
+        # Đo thật 2026-08-27 (curated-ratios-ttm Task 19): /ratios?symbol=AAPL&period=quarter
+        # trả HTTP 402 "This value set for 'period' is not available under your current
+        # subscription" -- gói FMP hiện tại không có endpoint này. 72 field ratios.yaml đã
+        # ghi oracle: none trong field_sources.yaml (Task 2), không cần sửa gì thêm. Kết
+        # cục đã lường trước trong spec §6.2 -- Task 20 (test đối chiếu vendor) bị bỏ qua.
+        # availability đổi unknown -> paid_required 2026-08-30: đây KHÔNG phải lỗi param
+        # (limit/period), test sống đã xác nhận 402 dù param đúng -- gói hiện tại thật sự
+        # không có endpoint này.
+        notes: Use as vendor reconciliation; alpha curated should derive ratios from PIT statements.
+        params: {symbol: "{symbol}", period: quarter, limit: 5}
+        landing: {partition_key: "{symbol}"}
+
+      earnings:
+        path: /earnings
+        scope: per_symbol
+        domain: earnings
+        field_groups: [A5_corporate_events, B10_earnings_surprise]
+        grain: one row per symbol per earnings event
+        priority: high
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # F16 (spec 2026-08-18): limit:120 -> HTTP 402 trên gói hiện tại. Bỏ hẳn `limit`
+        # -- đo thật trả 165 dòng (1985->2026), nhiều hơn mọi giá trị limit hợp lệ.
+        # availability đổi unknown -> free_tested 2026-08-30: đo sống qua Trino,
+        # raw.raw_fmp_earnings đã có 625 dòng thật -- param fix đã chạy đúng từ lâu,
+        # chỉ nhãn này bị bỏ quên.
+        notes: "limit vượt trần gói làm endpoint trả HTTP 402; bỏ limit trả về nhiều dòng hơn mọi giá trị limit hợp lệ."
+        params: {symbol: "{symbol}", includeReportTimes: true}
+        landing: {partition_key: "{symbol}"}
+
+      analyst_estimates:
+        path: /analyst-estimates
+        scope: per_symbol
+        domain: analyst
+        field_groups: [A7_analyst_estimates]
+        grain: one row per symbol per fiscal period estimate snapshot
+        priority: high
+        availability: free_tested
+        enabled: true
+        tiers: [t1]
+        params: {symbol: "{symbol}", period: annual, page: 0, limit: 10}
+        landing: {partition_key: "{symbol}"}
+
+      analyst_recommendations:
+        path: /grades-historical
+        scope: per_symbol
+        domain: analyst
+        field_groups: [A7_analyst_estimates]
+        grain: one row per symbol per month ratings snapshot
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1]
+        # F16 (spec 2026-08-18): limit:360 -> HTTP 402 trên gói hiện tại. Bỏ hẳn `limit`
+        # -- đo thật trả 92 dòng, nhiều hơn mọi giá trị limit hợp lệ.
+        notes: "Gói free 402 khi có limit (F16); Premium gửi limit 1000 -- probe ngày 1 xác nhận."
+        params: {symbol: "{symbol}", limit: 1000}
+        landing: {partition_key: "{symbol}"}
+
+      grades:
+        path: /grades
+        scope: per_symbol
+        domain: analyst
+        field_groups: [A22_security_ratings]
+        grain: one row per symbol per grading action
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      price_target_summary:
+        path: /price-target-summary
+        scope: per_symbol
+        domain: analyst
+        field_groups: [A7_analyst_estimates]
+        grain: one row per symbol price target summary snapshot
+        priority: medium
+        availability: free_tested
+        enabled: true
+        notes: "F11 (spec 2026-08-18): endpoint không có cột date -- mốc thời gian lấy từ @run_date của landing, lịch sử chỉ bắt đầu từ lần chạy đầu tiên."
+        tiers: [t1]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      price_target_consensus:
+        path: /price-target-consensus
+        scope: per_symbol
+        domain: analyst
+        field_groups: [A7_analyst_estimates]
+        grain: one row per symbol price target consensus snapshot
+        priority: medium
+        availability: free_tested
+        enabled: true
+        notes: "F11 (spec 2026-08-18): endpoint không có cột date -- mốc thời gian lấy từ @run_date của landing, lịch sử chỉ bắt đầu từ lần chạy đầu tiên."
+        tiers: [t1]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      treasury_rates:
+        path: /treasury-rates
+        scope: market_wide
+        domain: macro
+        field_groups: [A9_macro]
+        grain: one row per observation date
+        priority: medium
+        availability: free_tested
+        enabled: true
+        # Đo sống 2026-09-22: endpoint này chỉ trả về 90 NGÀY LỊCH tính lùi từ `to`, và
+        # cắt IM LẶNG phần cũ hơn -- `from=2020-01-01&to=2020-04-30` trả 63 dòng nhưng
+        # dòng cũ nhất là 2020-01-31, mất trọn tháng 1. Request cũ ở đây chỉ có
+        # `from: 2015-01-01` và KHÔNG có `to`, nên đứng vĩnh viễn ở 2015-01-02..2015-04-01
+        # -- không giao nhau với cửa sổ mart (từ 2016) ⇒ cả 6 field yield_* NULL 100%
+        # suốt 3.661 ngày mà không cổng nào đỏ.
+        #
+        # "-89d" chứ KHÔNG phải "-3m": quý Mar-May và Jul-Sep dài 92 ngày, vượt cửa sổ 90
+        # ngày của nhà cung cấp và sẽ lại bị cắt im lặng. 89 ngày cũng phủ quá
+        # max_staleness_days=90 của curated_macro_daily nên forward-fill không hết hạn.
+        #
+        # Backfill 10 năm KHÔNG khai ở đây: nó là việc chạy một lần (42 chunk cho endpoint
+        # này, 546 request khi tính cả 12 series macro) và sẽ ngốn hạn ngạch 250 req/ngày
+        # mỗi đêm nếu thành cấu hình thường trực. Dùng
+        # `--window-from/--window-to/--window-split-every` của run_batch.py.
+        windows: {span: "-89d"}
+        params: {from: "{from}", to: "{to}"}
+        landing: {partition_key: "treasury_rates/{from}"}
+
+      economic_indicators:
+        path: /economic-indicators
+        # F10a (spec 2026-08-18): gộp 3 key economic_gdp/economic_cpi/economic_federal_funds
+        # thành một key macro_series -- thêm series về sau chỉ cần thêm 1 dòng vào
+        # runtime_sets.fmp_macro_series, không đụng contract hay model.
+        scope: macro_series
+        domain: macro
+        field_groups: [A9_macro]
+        grain: one row per macro indicator observation date
+        priority: medium
+        availability: free_tested
+        enabled: true
+        # Cùng bệnh, cùng cách chữa như treasury_rates ở trên: KHÔNG gửi khoảng ngày nào
+        # thì FMP trả về một cửa sổ 3 tháng CŨ (đo 2026-09-22: federalFunds ra
+        # 2025-10..2025-12 trong khi có `to` tường minh thì ra 2026-07..2026-08), nên mart
+        # macro đứng ở 2026-03-01 -- forward-fill 90 ngày hết hạn rồi im lặng NULL.
+        # Cửa sổ cũng cắt theo 90 ngày lịch neo vào `to`: initialClaims (tuần) trả đúng
+        # 13 dòng cho cả yêu cầu 3 tháng và 4 tháng, bản 4 tháng mất tháng đầu.
+        windows: {span: "-89d"}
+        params: {name: "{series_id}", from: "{from}", to: "{to}"}
+        landing: {partition_key: "{series_id}/{from}"}
+
+      index_sp500:
+        path: /historical-price-eod/non-split-adjusted
+        scope: market_wide
+        domain: market_index
+        field_groups: [A9_macro]
+        grain: one row per index per trading date
+        priority: medium
+        availability: unknown
+        enabled: false
+        notes: "F9b (spec 2026-08-18): chỉ số không chia tách / không trả cổ tức nên giá thô (non-split-adjusted) là đủ. CẤM dùng /historical-price-eod/full -- luật giá EOD ở F12/F12b cấm ingest mọi endpoint giá đã chuẩn hoá; `vwap` của endpoint đó là `(o+h+l+c)/4`, không phải VWAP thật — đã khai gap ở catalog (spec 2026-09-02). Raw contract deleted (2026-08-11 staging-regen); benchmark to be rebuilt at the curated layer later if needed."
+        params: {symbol: "^GSPC"}
+        landing: {partition_key: GSPC}
+
+      index_vix:
+        path: /historical-price-eod/non-split-adjusted
+        scope: market_wide
+        domain: market_index
+        field_groups: [A9_macro]
+        grain: one row per index per trading date
+        priority: medium
+        availability: unknown
+        enabled: false
+        notes: "F9b (spec 2026-08-18): chỉ số không chia tách / không trả cổ tức nên giá thô (non-split-adjusted) là đủ. CẤM dùng /historical-price-eod/full -- luật giá EOD ở F12/F12b cấm ingest mọi endpoint giá đã chuẩn hoá; `vwap` của endpoint đó là `(o+h+l+c)/4`, không phải VWAP thật — đã khai gap ở catalog (spec 2026-09-02). Raw contract deleted (2026-08-11 staging-regen); benchmark to be rebuilt at the curated layer later if needed."
+        params: {symbol: "^VIX"}
+        landing: {partition_key: VIX}
+
+      insider_statistics:
+        path: /insider-trading/statistics
+        scope: per_symbol
+        domain: ownership
+        field_groups: [A11_insider_trading]
+        grain: one row per symbol per fiscal quarter of insider activity
+        priority: medium
+        availability: paid_required
+        enabled: false
+        notes: "Task 7 live check (2026-08-12) -- direct curl confirmed 'Restricted Endpoint' on the current FMP tier, independent of any request parameter. DISABLED 2026-09-12: free tier quota exhausted at landing_fmp_index_list; re-enable after FMP plan upgrade."
+        tiers: [t1]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      mergers_acquisitions:
+        path: /mergers-acquisitions-search
+        scope: per_group
+        domain: corporate_events
+        field_groups: [A12_delisting_reason]
+        grain: one row per announced M&A transaction
+        priority: high
+        availability: paid_required
+        enabled: false
+        notes: "Đo thật 2026-08-18: /mergers-acquisitions-search?name=Apple trả 402 trên gói hiện tại. DISABLED 2026-09-12: free tier quota exhausted at landing_fmp_index_list; re-enable after FMP plan upgrade."
+        # Lý do đặt ở `notes:` chứ không chỉ trong comment: comment YAML không đọc được
+        # qua load_yaml, nên test không kiểm được "tắt thì phải nói vì sao".
+        # F7/F7b (spec 2026-08-18): -search chỉ nhận `name` (tên công ty), không nhận
+        # `symbol` -- build_runtime_values() (pipelines/landing/ingest.py) chỉ sinh
+        # {symbol}/{series_id}/{group}, không có {company_name}, nên dùng per_group +
+        # runtime_set universe_company_names đúng khuôn sector_pe/industry_pe cũ.
+        # Đo thật 2026-08-18: /mergers-acquisitions-search?name=Apple trả 402 trên gói
+        # hiện tại (trong khi -latest bỏ limit trả 100 dòng) -- người dùng vẫn chọn
+        # chuyển hẳn sang -search theo R-a, chấp nhận 0 dòng tới khi nâng gói.
+        # availability đổi unknown -> paid_required 2026-08-30: -search đã dùng đúng
+        # param (name, không phải symbol) mà vẫn 402 -- không phải lỗi param, gói hiện
+        # tại thật sự không có endpoint này.
+        group_param: name
+        runtime_set: universe_company_names
+        params: {name: "{group}"}
+        landing: {partition_key: "group-{group}"}
+
+      employee_count:
+        path: /historical-employee-count
+        scope: per_symbol
+        domain: fundamentals
+        field_groups: [A13_employee_count]
+        grain: one row per symbol per annual filing
+        priority: low
+        availability: free_tested
+        enabled: true
+        tiers: [t1]
+        # F16 (spec 2026-08-18): limit:100 -> HTTP 402 trên gói hiện tại. Bỏ hẳn `limit`
+        # -- đo thật trả 32 dòng, nhiều hơn mọi giá trị limit hợp lệ.
+        # availability đổi unknown -> free_tested 2026-08-30: đo sống qua Trino,
+        # raw.raw_fmp_employee_count đã có 136 dòng thật -- param fix đã chạy đúng từ
+        # lâu, chỉ nhãn này bị bỏ quên.
+        notes: "limit vượt trần gói làm endpoint trả HTTP 402; bỏ limit trả về nhiều dòng hơn mọi giá trị limit hợp lệ."
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      available_sectors:
+        path: /available-sectors
+        scope: reference
+        domain: reference
+        field_groups: [A10_sector_industry]
+        grain: one row per sector
+        priority: high
+        availability: paid_required
+        enabled: false
+        notes: "Task 7 live check (2026-08-12) -- direct curl confirmed 'Restricted Endpoint' on the current FMP tier, independent of any request parameter. DISABLED 2026-09-12: free tier quota exhausted at landing_fmp_index_list; re-enable after FMP plan upgrade."
+        params: {}
+        landing: {partition_key: all}
+
+      available_industries:
+        path: /available-industries
+        scope: reference
+        domain: reference
+        field_groups: [A10_sector_industry]
+        grain: one row per industry
+        priority: high
+        availability: paid_required
+        enabled: false
+        notes: "Task 7 live check (2026-08-12) -- direct curl confirmed 'Restricted Endpoint' on the current FMP tier, independent of any request parameter. DISABLED 2026-09-12: free tier quota exhausted at landing_fmp_index_list; re-enable after FMP plan upgrade."
+        params: {}
+        landing: {partition_key: all}
+
+      financial_reports_dates:
+        path: /financial-reports-dates
+        scope: per_symbol
+        domain: financial_statement
+        field_groups: [A14_filing_calendar]
+        grain: one row per symbol per filed report
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      enterprise_values:
+        path: /enterprise-values
+        scope: per_symbol
+        domain: financial_metric
+        field_groups: [A15_valuation_detail]
+        grain: one row per symbol per fiscal period
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        params: {symbol: "{symbol}", period: annual, limit: 15}
+        landing: {partition_key: "{symbol}"}
+
+      owner_earnings:
+        path: /owner-earnings
+        scope: per_symbol
+        domain: financial_metric
+        field_groups: [A16_owner_earnings]
+        grain: one row per symbol per fiscal period
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        params: {symbol: "{symbol}", limit: 60}
+        landing: {partition_key: "{symbol}"}
+
+      financial_statement_symbol_list:
+        path: /financial-statement-symbol-list
+        scope: reference
+        domain: reference
+        field_groups: [A10_reference_identifier]
+        grain: one row per symbol with financial statements available
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      revenue_geographic_segmentation:
+        path: /revenue-geographic-segmentation
+        scope: per_symbol
+        domain: financial_statement
+        field_groups: [A17_revenue_segmentation]
+        grain: one row per symbol per fiscal period
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        # data.<region> là key động theo từng công ty -- xem cảnh báo trong
+        # contracts/vocabulary/README.md trước khi bật endpoint này.
+        params: {symbol: "{symbol}", period: annual, structure: flat}
+        landing: {partition_key: "{symbol}"}
+
+      economic_calendar:
+        path: /economic-calendar
+        scope: market_wide
+        domain: macro
+        field_groups: [A9_macro]
+        grain: one row per economic data release event
+        priority: medium
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {country: US}
+        landing: {partition_key: US}
+
+      index_list:
+        path: /index-list
+        scope: reference
+        domain: market_index
+        field_groups: [A19_market_index_reference]
+        grain: one row per stock market index
+        priority: low
+        availability: free_tested
+        enabled: true
+        params: {}
+        landing: {partition_key: all}
+
+      sp500_constituent:
+        path: /sp500-constituent
+        scope: reference
+        domain: market_index
+        field_groups: [A19_market_index_reference]
+        grain: one row per current S&P 500 constituent
+        priority: low
+        availability: paid_required
+        enabled: false
+        # F14 (spec 2026-08-18): đổi từ Dow Jones (30 mã, quá hẹp cho alpha cross-sectional)
+        # sang S&P 500 -- universe.yaml khai benchmark: SPY.
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      historical_sp500_constituent:
+        path: /historical-sp500-constituent
+        scope: reference
+        domain: market_index
+        field_groups: [A19_market_index_reference]
+        grain: one row per S&P 500 constituent add/remove event
+        priority: low
+        availability: paid_required
+        enabled: false
+        # F14 (spec 2026-08-18): đổi từ Dow Jones sang S&P 500 -- xem sp500_constituent.
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      index_constituent:
+        path: /index-constituent
+        scope: reference
+        domain: market_index
+        field_groups: [A19_market_index_reference]
+        grain: one row per index constituent
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      symbol_change:
+        path: /symbol-change
+        scope: market_wide
+        domain: corporate_action
+        field_groups: [A20_symbol_change]
+        grain: one row per ticker symbol change event
+        priority: medium
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {invalid: "false"}
+        landing: {partition_key: all}
+
+      ipos_calendar:
+        path: /ipos-calendar
+        scope: market_wide
+        domain: corporate_events
+        field_groups: [A5_corporate_events]
+        grain: one row per scheduled IPO event
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      ipos_disclosure:
+        path: /ipos-disclosure
+        scope: market_wide
+        domain: corporate_events
+        field_groups: [A5_corporate_events]
+        grain: one row per IPO SEC disclosure filing
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      cik_list:
+        path: /cik-list
+        scope: paged_reference
+        domain: reference
+        field_groups: [A10_reference_identifier]
+        grain: one row per SEC-registered CIK
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {page: "{page}", limit: 1000}
+        landing: {partition_key: "page-{page}"}
+
+      all_industry_classification:
+        path: /all-industry-classification
+        scope: paged_reference
+        domain: reference
+        field_groups: [A8_sector_classification, A10_reference_identifier]
+        grain: one row per symbol per industry classification
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {page: "{page}", limit: 1000}
+        landing: {partition_key: "page-{page}"}
+
+      available_countries:
+        path: /available-countries
+        scope: reference
+        domain: reference
+        field_groups: [A10_reference_identifier]
+        grain: one row per country code
+        priority: low
+        availability: paid_required
+        enabled: false
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {}
+        landing: {partition_key: all}
+
+      sec_profile:
+        path: /sec-profile
+        scope: per_symbol
+        domain: security_master
+        field_groups: [A10_reference_identifier]
+        grain: one row per symbol SEC company profile
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1, t2]
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      ratings_historical:
+        path: /ratings-historical
+        scope: per_symbol
+        domain: analyst
+        field_groups: [A22_security_ratings]
+        grain: one row per symbol per rating date
+        priority: medium
+        availability: free_tested
+        enabled: true
+        tiers: [t1]
+        # Đo 2026-09-30: không gửi limit thì trả đúng 1 dòng (tài liệu ví dụ limit=1).
+        row_cap: 3000
+        params: {symbol: "{symbol}", limit: 3000}
+        landing: {partition_key: "{symbol}"}
+
+      insider_trading_search:
+        path: /insider-trading/search
+        scope: per_symbol
+        domain: ownership
+        field_groups: [A11_insider_trading]
+        grain: one row per insider transaction filing
+        priority: medium
+        availability: paid_required
+        enabled: false
+        tiers: [t1, t2]
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+      insider_trading_transaction_type:
+        path: /insider-trading-transaction-type
+        scope: reference
+        domain: reference
+        field_groups: [A11_insider_trading]
+        grain: one row per insider transaction type code
+        priority: low
+        availability: free_tested
+        enabled: true
+        params: {}
+        landing: {partition_key: all}
+
+      acquisition_of_beneficial_ownership:
+        path: /acquisition-of-beneficial-ownership
+        scope: per_symbol
+        domain: ownership
+        field_groups: [A23_beneficial_ownership]
+        grain: one row per symbol per beneficial ownership filing
+        priority: medium
+        availability: paid_required
+        enabled: false
+        tiers: [t1, t2]
+        notes: Chưa có raw contract -- xem staging-regen-scoped. Bật khi contract sinh xong.
+        params: {symbol: "{symbol}"}
+        landing: {partition_key: "{symbol}"}
+
+runtime_sets:
+  # F10/F10a/F10b (spec 2026-08-18): FRED đã gỡ hẳn -- dự án chỉ dùng một nguồn duy
+  # nhất là FMP. 12 series dưới đây đều đo thật HTTP 200 trên /economic-indicators.
+  # inflationRate KHÔNG có ở đây -- nó là % biến động của chính CPI, field phái sinh (R-c).
+  fmp_macro_series:
+    - federalFunds
+    - CPI
+    - GDP
+    - realGDP
+    - unemploymentRate
+    - totalNonfarmPayroll
+    - initialClaims
+    - retailSales
+    - smoothedUSRecessionProbabilities
+    - industrialProductionTotalIndex
+    - consumerSentiment
+    - "30YearFixedRateMortgageAverage"
+  # Seed theo configs/universes/universe.yaml. /mergers-acquisitions-search chỉ nhận
+  # tên công ty, không nhận ticker -- xem F7/F7b trong spec 2026-08-18.
+  universe_company_names: [Apple, Microsoft, NVIDIA, Amazon, Meta]
+  # spec 2026-09-30 §2 -- dùng bởi universe_builder.
+  universe_exchanges: [NASDAQ, NYSE]

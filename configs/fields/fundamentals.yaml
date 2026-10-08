@@ -1,0 +1,60 @@
+# field.md Group A2 (Income Statement) + A3 (Balance Sheet) + A4 (Cash Flow) + float_shares (A8)
+# Raw financial-statement line items from SimFin (quarterly/annual), forward-filled to symbol_daily grain.
+fields:
+  # A2: Income Statement
+  - {name: revenue,            value_type: numeric_matrix, grain: symbol_daily, mart_column: revenue,            unit: USD,           sign: signed,    pit_semantics: filing, description: "Net revenue"}
+  - {name: cogs,                value_type: numeric_matrix, grain: symbol_daily, mart_column: cogs,                unit: USD,           sign: signed,    pit_semantics: filing, description: "Cost of goods sold"}
+  - {name: gross_profit,        value_type: numeric_matrix, grain: symbol_daily, mart_column: gross_profit,        unit: USD,           sign: signed,    pit_semantics: filing, description: "Gross profit"}
+  - {name: rd_expense,          value_type: numeric_matrix, grain: symbol_daily, mart_column: rd_expense,          unit: USD,           sign: signed,    pit_semantics: filing, description: "Research & development expense"}
+  - {name: sga_expense,         value_type: numeric_matrix, grain: symbol_daily, mart_column: sga_expense,         unit: USD,           sign: signed,    pit_semantics: filing, description: "Selling, general & administrative expense"}
+  - {name: operating_income,    value_type: numeric_matrix, grain: symbol_daily, mart_column: operating_income,    unit: USD,           sign: signed,    pit_semantics: filing, description: "Operating income (EBIT)"}
+  - {name: interest_expense,    value_type: numeric_matrix, grain: symbol_daily, mart_column: interest_expense,    unit: USD,           sign: signed,    pit_semantics: filing, description: "Net interest expense"}
+  - {name: pretax_income,       value_type: numeric_matrix, grain: symbol_daily, mart_column: pretax_income,       unit: USD,           sign: signed,    pit_semantics: filing, description: "Pre-tax income"}
+  - {name: income_tax,          value_type: numeric_matrix, grain: symbol_daily, mart_column: income_tax,          unit: USD,           sign: signed,    pit_semantics: filing, description: "Income tax expense (benefit)"}
+  - {name: net_income,          value_type: numeric_matrix, grain: symbol_daily, mart_column: net_income,          unit: USD,           sign: signed,    pit_semantics: filing, description: "Net income, including minority interest"}
+  - {name: net_income_common,   value_type: numeric_matrix, grain: symbol_daily, mart_column: net_income_common,   unit: USD,           sign: signed,    pit_semantics: filing, description: "Net income attributable to common shareholders"}
+  - {name: ebitda,              value_type: numeric_matrix, grain: symbol_daily, mart_column: ebitda,              unit: USD,           sign: signed,    pit_semantics: filing, description: "EBITDA"}
+  - {name: depreciation,        value_type: numeric_matrix, grain: symbol_daily, mart_column: depreciation,        unit: USD,           sign: signed,    pit_semantics: filing, description: "Depreciation & amortization of tangible and intangible assets"}
+  - {name: eps_basic,           value_type: numeric_matrix, grain: symbol_daily, mart_column: eps_basic,           unit: USD_per_share, dsl_unit: "CSShare:-1", sign: signed,    pit_semantics: filing, description: "Basic earnings per share"}
+  - {name: eps_diluted,         value_type: numeric_matrix, grain: symbol_daily, mart_column: eps_diluted,         unit: USD_per_share, dsl_unit: "CSShare:-1", sign: signed,    pit_semantics: filing, description: "Diluted earnings per share"}
+  - {name: shares_basic,        value_type: numeric_matrix, grain: symbol_daily, mart_column: shares_basic,        unit: shares,        dsl_unit: "CSShare:1", sign: signed,    pit_semantics: filing, description: "Weighted average basic shares used for EPS"}
+  - {name: shares_diluted,      value_type: numeric_matrix, grain: symbol_daily, mart_column: shares_diluted,      unit: shares,        dsl_unit: "CSShare:1", sign: signed,    pit_semantics: filing, description: "Weighted average diluted shares used for EPS"}
+
+  # A3: Balance Sheet
+  - {name: total_assets,          value_type: numeric_matrix, grain: symbol_daily, mart_column: total_assets,          unit: USD,    sign: signed, pit_semantics: filing, description: "Total assets"}
+  - {name: current_assets,        value_type: numeric_matrix, grain: symbol_daily, mart_column: current_assets,        unit: USD,    sign: signed, pit_semantics: filing, description: "Total current assets"}
+  - {name: cash_equivalents,      value_type: numeric_matrix, grain: symbol_daily, mart_column: cash_equivalents,      unit: USD,    sign: signed, pit_semantics: filing, description: "Cash, cash equivalents & short-term investments"}
+  - {name: receivables,           value_type: numeric_matrix, grain: symbol_daily, mart_column: receivables,           unit: USD,    sign: signed, pit_semantics: filing, description: "Accounts & notes receivable"}
+  - {name: inventories,           value_type: numeric_matrix, grain: symbol_daily, mart_column: inventories,           unit: USD,    sign: signed, pit_semantics: filing, description: "Inventories"}
+  - {name: other_current_assets,  value_type: numeric_matrix, grain: symbol_daily, mart_column: other_current_assets,  unit: USD,    sign: signed, pit_semantics: filing, description: "Other current assets"}
+  - {name: non_current_assets,    value_type: numeric_matrix, grain: symbol_daily, mart_column: non_current_assets,    unit: USD,    sign: signed, pit_semantics: filing, description: "Total non-current assets"}
+  - {name: pp_and_e,              value_type: numeric_matrix, grain: symbol_daily, mart_column: pp_and_e,              unit: USD,    sign: signed, pit_semantics: filing, description: "Property, plant & equipment, net of depreciation"}
+  - {name: intangibles,           value_type: numeric_matrix, grain: symbol_daily, mart_column: intangibles,           unit: USD,    sign: signed, pit_semantics: filing, description: "Intangible assets, including goodwill"}
+  - {name: goodwill,              value_type: numeric_matrix, grain: symbol_daily, mart_column: goodwill,              unit: USD,    sign: signed, pit_semantics: filing, description: "Goodwill"}
+  - {name: total_liabilities,     value_type: numeric_matrix, grain: symbol_daily, mart_column: total_liabilities,     unit: USD,    sign: signed, pit_semantics: filing, description: "Total liabilities"}
+  - {name: current_liabilities,   value_type: numeric_matrix, grain: symbol_daily, mart_column: current_liabilities,   unit: USD,    sign: signed, pit_semantics: filing, description: "Total current liabilities"}
+  - {name: accounts_payable,      value_type: numeric_matrix, grain: symbol_daily, mart_column: accounts_payable,      unit: USD,    sign: signed, pit_semantics: filing, description: "Payables & accruals owed to suppliers"}
+  - {name: short_term_debt,       value_type: numeric_matrix, grain: symbol_daily, mart_column: short_term_debt,       unit: USD,    sign: signed, pit_semantics: filing, description: "Short-term interest-bearing debt"}
+  - {name: long_term_debt,        value_type: numeric_matrix, grain: symbol_daily, mart_column: long_term_debt,        unit: USD,    sign: signed, pit_semantics: filing, description: "Long-term interest-bearing debt"}
+  - {name: total_equity,          value_type: numeric_matrix, grain: symbol_daily, mart_column: total_equity,          unit: USD,    sign: signed, pit_semantics: filing, description: "Total shareholders' equity"}
+  - {name: common_equity,         value_type: numeric_matrix, grain: symbol_daily, mart_column: common_equity,         unit: USD,    sign: signed, pit_semantics: filing, description: "Common shareholders' equity"}
+  - {name: retained_earnings,     value_type: numeric_matrix, grain: symbol_daily, mart_column: retained_earnings,     unit: USD,    sign: signed, pit_semantics: filing, description: "Accumulated retained earnings"}
+  - {name: shares_outstanding,    value_type: numeric_matrix, grain: symbol_daily, mart_column: shares_outstanding,    unit: shares, dsl_unit: "CSShare:1", sign: signed, pit_semantics: filing, description: "Shares outstanding at period end"}
+
+  # A4: Cash Flow Statement
+  - {name: cfo,                        value_type: numeric_matrix, grain: symbol_daily, mart_column: cfo,                        unit: USD, sign: signed,    pit_semantics: filing, description: "Net cash from operating activities"}
+  - {name: cfi,                        value_type: numeric_matrix, grain: symbol_daily, mart_column: cfi,                        unit: USD, sign: signed,    pit_semantics: filing, description: "Net cash from investing activities"}
+  - {name: cff,                        value_type: numeric_matrix, grain: symbol_daily, mart_column: cff,                        unit: USD, sign: signed,    pit_semantics: filing, description: "Net cash from financing activities"}
+  - {name: capex,                      value_type: numeric_matrix, grain: symbol_daily, mart_column: capex,                      unit: USD, sign: magnitude, pit_semantics: filing, description: "Capital expenditure (change in fixed assets & intangibles; negative = cash out)"}
+  - {name: maintenance_capex,          value_type: numeric_matrix, grain: symbol_daily, mart_column: maintenance_capex,          unit: USD, sign: signed,    pit_semantics: filing, description: "số vendor tự tính (FMP), không dẫn xuất từ statement — xem nợ N-m"}
+  - {name: depreciation_cf,            value_type: numeric_matrix, grain: symbol_daily, mart_column: depreciation_cf,            unit: USD, sign: signed,    pit_semantics: filing, description: "D&A as reported on the cash flow statement (added back in CFO)"}
+  - {name: stock_based_comp,           value_type: numeric_matrix, grain: symbol_daily, mart_column: stock_based_comp,           unit: USD, sign: signed,    pit_semantics: filing, description: "Stock-based compensation expense"}
+  - {name: changes_working_capital,    value_type: numeric_matrix, grain: symbol_daily, mart_column: changes_working_capital,    unit: USD, sign: signed,    pit_semantics: filing, description: "Change in working capital during the period"}
+  - {name: dividends_paid,             value_type: numeric_matrix, grain: symbol_daily, mart_column: dividends_paid,             unit: USD, sign: magnitude, pit_semantics: filing, description: "Cash dividends paid"}
+  - {name: share_repurchases,          value_type: numeric_matrix, grain: symbol_daily, mart_column: share_repurchases,          unit: USD, sign: magnitude, pit_semantics: filing, description: "Common stock repurchased"}
+  - {name: net_change_cash,            value_type: numeric_matrix, grain: symbol_daily, mart_column: net_change_cash,            unit: USD, sign: signed,    pit_semantics: filing, description: "Net change in cash during the period"}
+  - {name: free_cash_flow,             value_type: numeric_matrix, grain: symbol_daily, mart_column: free_cash_flow,             unit: USD, sign: signed,    pit_semantics: filing, description: "Free cash flow = CFO - CapEx (as reported by SimFin)"}
+
+  # A8: float shares (used by B11 short_float_pct)
+  - {name: float_shares,       value_type: numeric_matrix, grain: symbol_daily, mart_column: float_shares,       unit: shares, dsl_unit: "CSShare:1", sign: signed, pit_semantics: filing, description: "Shares actually free-floating in the market"}
+

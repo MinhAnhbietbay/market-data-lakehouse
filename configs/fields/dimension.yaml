@@ -1,0 +1,15 @@
+# Trục pháp nhân (cik): group field (vendor_sector/industry) dùng cho cross-sectional
+# neutralization và số đo pháp nhân (employee_count). Dữ liệu đi qua cầu cik ↔ symbol.
+fields:
+  - {name: vendor_sector,   value_type: group_field, grain: group_daily, mart_column: vendor_sector,   sign: signed, pit_semantics: observation, description: "Vendor Sector, level-1 industry classification (vendor taxonomy, not GICS)"}
+  - {name: vendor_industry, value_type: group_field, grain: group_daily, mart_column: vendor_industry, sign: signed, pit_semantics: observation, description: "Vendor Industry, level-2 industry classification (vendor taxonomy, not GICS)"}
+  - {name: market,   value_type: group_field, grain: group_daily, mart_column: market,   sign: signed, pit_semantics: observation, description: "Market grouping (BRAIN) -- thị trường niêm yết (US/HK/TO...), từ std_ar_listing.market_code. KHÔNG liên quan tới setting neutralization='market' (setting đó nghĩa là trung hoà toàn thị trường)."}
+  - {name: exchange, value_type: group_field, grain: group_daily, mart_column: exchange, sign: signed, pit_semantics: observation, description: "Exchange grouping (BRAIN) -- sàn niêm yết (NASDAQ/NYSE/AMEX/OTC...), từ std_ar_listing.exchange_code."}
+  - {name: country,  value_type: group_field, grain: group_daily, mart_column: country,  sign: signed, pit_semantics: observation, description: "Country grouping (BRAIN) -- mã quốc gia ISO của pháp nhân, từ std_ip_legal_entity.country_code, bắc cầu cik->symbol qua share_class_figi."}
+  - {name: employee_count, value_type: numeric_matrix, grain: symbol_daily, mart_column: employee_count, unit: persons, sign: signed, pit_semantics: observation, description: "Số nhân viên toàn thời gian theo hồ sơ SEC, forward-fill tối đa 550 ngày; bắc cầu cik->symbol qua share_class_figi"}
+  - {name: sector,   value_type: group_field, grain: group_daily, mart_column: vendor_sector,   sign: signed, pit_semantics: observation, description: "Sector grouping (tên của BRAIN). BÍ DANH của vendor_sector -- cùng cột, cùng giá trị; giữ hai tên vì đợt 3c vừa đổi gics_* -> vendor_* trên 13 file."}
+  - {name: industry, value_type: group_field, grain: group_daily, mart_column: vendor_industry, sign: signed, pit_semantics: observation, description: "Industry grouping (tên của BRAIN). BÍ DANH của vendor_industry."}
+  - {name: subindustry, value_type: group_field, grain: group_daily, mart_column: subindustry, sign: signed, pit_semantics: observation, description: "Subindustry grouping (BRAIN). KHÔNG CÓ NGUỒN: taxonomy hiện tại chỉ có 2 tầng (sector/industry)."}
+
+
+

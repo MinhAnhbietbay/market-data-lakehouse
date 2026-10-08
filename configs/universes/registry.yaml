@@ -1,0 +1,121 @@
+# Định nghĩa RỔ ALPHA + tham số cổng IS.
+#
+# KHÁC universe.yaml trong cùng thư mục: universe.yaml là PHẠM VI INGESTION
+# (fetch dữ liệu mã nào). File này nói CHẤM ĐIỂM TRÊN RỔ NÀO. Xem spec B2 §2.1.
+#
+# min_instruments / min_days_ratio: vế thứ hai của check `weight` (spec B1 §3.2).
+# BRAIN không công bố con số; đây là số do dự án chọn (nợ B1-2).
+universes:
+  TOP3000:
+    size: 3000
+    sub_universe: TOP1000
+    min_instruments: 100
+    min_days_ratio: 0.80
+    os_sharpe_floor: 0.0
+    os_returns_floor: 0.0
+    # 5 cutoff sản xuất chuẩn của 7 tiêu chí cổng IS (is_gate.py) -- giá trị này
+    # KHỚP đúng hằng số hardcode cũ, không đổi hành vi cho universe thật.
+    sharpe_cutoff: 1.25
+    fitness_cutoff: 1.0
+    turnover_min: 0.01
+    turnover_max: 0.70
+    max_weight_cutoff: 0.10
+    corr_threshold: 0.70
+    corr_window_years: 4
+    corr_sharpe_margin: 1.1
+    dd_stop: -0.20
+    sharpe_window: 60
+    realloc_period: 5
+    ema_alpha: 0.3
+    w_max: 0.20
+    w_seed: 0.01
+    # B3 (spec 2026-09-04 §4.2): trọng số composite rank_score. Tổng độ lớn = 1;
+    # Sharpe nặng nhất (risk-adjusted là chính), drawdown/turnover phạt nhẹ.
+    rank_w_sharpe: 0.50
+    rank_w_return: 0.30
+    rank_w_drawdown: 0.10
+    rank_w_turnover: 0.10
+  TOP1000:
+    size: 1000
+    sub_universe: null
+    min_instruments: 40
+    min_days_ratio: 0.80
+    os_sharpe_floor: 0.0
+    os_returns_floor: 0.0
+    sharpe_cutoff: 1.25
+    fitness_cutoff: 1.0
+    turnover_min: 0.01
+    turnover_max: 0.70
+    max_weight_cutoff: 0.10
+    corr_threshold: 0.70
+    corr_window_years: 4
+    corr_sharpe_margin: 1.1
+    dd_stop: -0.20
+    sharpe_window: 60
+    realloc_period: 5
+    ema_alpha: 0.3
+    w_max: 0.20
+    w_seed: 0.01
+    # B3 (spec 2026-09-04 §4.2): trọng số composite rank_score. Tổng độ lớn = 1;
+    # Sharpe nặng nhất (risk-adjusted là chính), drawdown/turnover phạt nhẹ.
+    rank_w_sharpe: 0.50
+    rank_w_return: 0.30
+    rank_w_drawdown: 0.10
+    rank_w_turnover: 0.10
+  # Rổ 5 mã hiện hành. Sàn của TOP3000 sẽ làm MỌI alpha trượt check weight ->
+  # is_gate_pass=false -> guard submit không bao giờ mở -> B1 không nghiệm thu
+  # được lần nào. Đây là một dòng cấu hình, KHÔNG phải nhánh if trong code; khi
+  # mở gói FMP thì universe thật dùng dòng thật của nó và dòng này hết vai trò.
+  STUB5:
+    size: 5
+    sub_universe: null
+    min_instruments: 3
+    min_days_ratio: 0.80
+    # Ngưỡng NGHIỆM THU, không phải ngưỡng sản xuất. Trên 5 mã không công thức
+    # đơn giản nào đạt Sharpe OS dương (B1 DoD #14 đo được -0.99), nên đường
+    # simulated->live không kiểm chứng được nếu giữ sàn 0.0. Một dòng cấu hình,
+    # KHÔNG phải nhánh if trong code -- cùng khuôn với min_instruments ở trên.
+    # Giá trị này TỰ HIỆN trong validation_result.thresholds_used, không giấu được.
+    os_sharpe_floor: -2.0
+    # returns > 0.0 hardcode trước đây trong submission.py::_os_passed -- đo trực
+    # tiếp khi seed fixture: Sharpe OS đã qua sàn -2.0 nhưng returns vẫn âm
+    # (-0.26 đo được), và "returns dương" không đảm bảo tồn tại trên 5 mã ngẫu
+    # nhiên hơn "Sharpe dương" -- cùng nợ B1 DoD #14. Cùng khuôn os_sharpe_floor.
+    os_returns_floor: -1.0
+    # B2a (2026-09-03): phát hiện khi seed fixture Task 11 -- os_sharpe_floor một
+    # mình KHÔNG ĐỦ. Cổng IS (is_gate.py, chạy TRƯỚC submit, chặn simulated->
+    # validating) có 4 cutoff KHÁC hoàn toàn hardcode 1.25/1.0/0.01/0.70/0.10,
+    # và B1 đã TỰ ĐO + ghi nợ đúng việc này rồi ("live không đạt được hữu cơ",
+    # docs/erd/alpha-promotion-b1-2026-09-03.md DoD #14) -- B1 dừng ở
+    # simulated->validating->rejected, CHƯA BAO GIỜ thật sự tới live. Đo thật
+    # trên 6 công thức ứng viên (rank(close), close-ts_mean(close,5), v.v.):
+    # Sharpe IS tốt nhất đo được là 0.125 (rank(close)), cách xa cutoff 1.25.
+    # max_weight cũng chắc chắn trượt trên 5 mã: một alpha cross-sectional cân
+    # bằng gán ~1/5=20% mỗi mã, vượt trần 10% nghĩ cho universe lớn. Cùng khuôn
+    # os_sharpe_floor: ngưỡng NGHIỆM THU trên 5 mã, không phải ngưỡng sản xuất.
+    sharpe_cutoff: -1.0
+    fitness_cutoff: -1.0
+    turnover_min: 0.0
+    turnover_max: 1.0
+    max_weight_cutoff: 1.0
+    corr_threshold: 0.70
+    corr_window_years: 4
+    corr_sharpe_margin: 1.1
+    # Ngưỡng NGHIỆM THU, không phải sản xuất. Đo 2026-09-03 trên chuỗi 156 điểm:
+    # alpha 40 min drawdown -0.2857, vượt -20% lần đầu ở 2026-04-30 tức điểm thứ
+    # 82 -- trong khi trigger #2 cần 120 điểm. Giữ -0.20 thì #1 giết mất chủ thể
+    # của #2 và #5 và hai phép đo đó không thực hiện được (spec §7.3). NỚI ngưỡng
+    # chứ KHÔNG tắt task: drawdown_hardstop vẫn chạy, vẫn đánh giá, và giá trị
+    # thực dùng vẫn hiện trong retire_reason.thresholds nên không giấu được.
+    dd_stop: -0.95
+    sharpe_window: 60
+    realloc_period: 5
+    ema_alpha: 0.3
+    w_max: 0.20
+    w_seed: 0.01
+    # B3 (spec 2026-09-04 §4.2): trọng số composite rank_score. Tổng độ lớn = 1;
+    # Sharpe nặng nhất (risk-adjusted là chính), drawdown/turnover phạt nhẹ.
+    rank_w_sharpe: 0.50
+    rank_w_return: 0.30
+    rank_w_drawdown: 0.10
+    rank_w_turnover: 0.10

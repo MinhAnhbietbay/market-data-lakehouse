@@ -1,0 +1,297 @@
+# configs/curated/field_sources.yaml
+# Ánh xạ nguồn cho 190 field trong phạm vi curated layer (spec 2026-08-25 §5.2, 2026-08-27 §2).
+# Tổng: 42 passthrough, 126 derived, 22 gap.
+# 3 field còn lại (short_interest.yaml) hoãn theo spec 2026-08-27 §2.
+
+fields:
+  # =========================================================================
+  # 1. Price & Volume (price.yaml - 8 fields: 5 P, 2 D, 1 X)
+  # =========================================================================
+  - {field: open,          kind: passthrough, model: std_tx_daily_price_bar, column: open}
+  - {field: high,          kind: passthrough, model: std_tx_daily_price_bar, column: high}
+  - {field: low,           kind: passthrough, model: std_tx_daily_price_bar, column: low}
+  - {field: close,         kind: passthrough, model: std_tx_daily_price_bar, column: close}
+  - {field: volume,        kind: passthrough, model: std_tx_daily_price_bar, column: volume}
+  - {field: raw_open,   kind: passthrough, model: std_tx_daily_price_bar, column: open}
+  - {field: raw_high,   kind: passthrough, model: std_tx_daily_price_bar, column: high}
+  - {field: raw_low,    kind: passthrough, model: std_tx_daily_price_bar, column: low}
+  - {field: raw_close,  kind: passthrough, model: std_tx_daily_price_bar, column: close}
+  - {field: raw_volume, kind: passthrough, model: std_tx_daily_price_bar, column: volume}
+  - {field: typical_price, kind: derived, expression: "(adj_high + adj_low + adj_close) / 3", oracle: none, authority: "Nền ĐÃ điều chỉnh từ 2026-09-02 (spec §2.4) -- trước đó dùng giá thô và nhảy bậc qua ranh giới split"}
+  - {field: adj_close,     kind: derived, expression: "close * cumulative_split_factor * cumulative_dividend_factor", oracle: none, authority: "Dựng tại curated từ std_ev_stock_split + std_ev_cash_dividend (spec §5.3)"}
+  - {field: num_trades,    kind: gap, reason: "contract raw_fmp_ohlcv_non_split_adjusted không có cột số lệnh"}
+  - {field: split,             kind: derived, expression: "numerator / denominator tại ngày giao dịch hiệu lực, NULL ngày khác", oracle: none, authority: "BRAIN Available Market Data -- split chỉ có giá trị ngày sự kiện"}
+  - {field: dividend,          kind: derived, expression: "sum(dividend) tại ngày giao dịch hiệu lực, NULL ngày khác", oracle: none, authority: "BRAIN Available Market Data -- dividend chỉ có giá trị ngày sự kiện"}
+  - {field: vwap,            kind: gap, reason: "VWAP thật cần dữ liệu intraday; không nguồn nào trong hệ thống có. Cột 'vwap' của FMP là (o+h+l+c)/4 và endpoint chứa nó bị F12/F12b cấm ingest"}
+
+
+  # =========================================================================
+  # 2. Derived from OHLCV (derived_ohlcv.yaml - 13 fields: 0 P, 13 D, 0 X)
+  # =========================================================================
+  - {field: adj_factor,        kind: derived, expression: "adj_close / close", oracle: none}
+  - {field: adj_open,          kind: derived, expression: "open * adj_factor", oracle: none}
+  - {field: adj_high,          kind: derived, expression: "high * adj_factor", oracle: none}
+  - {field: adj_low,           kind: derived, expression: "low * adj_factor", oracle: none}
+  - {field: adj_volume,        kind: derived, expression: "volume / split_ratio", oracle: none, authority: "Chỉ điều chỉnh split, không điều chỉnh cổ tức (spec §5.3)"}
+  - {field: returns,           kind: derived, expression: "adj_close / prev_close - 1", oracle: none}
+  - {field: log_return,        kind: derived, expression: "ln(adj_close / prev_close)", oracle: none}
+  - {field: dollar_volume,     kind: derived, expression: "close * volume", oracle: none}
+  - {field: adj_dollar_volume, kind: derived, expression: "adj_close * adj_volume", oracle: none}
+  - {field: market_cap,        kind: derived, expression: "close * shares_basic", oracle: vendor_reference, authority: "close * shares_basic, dùng giá CHƯA chuẩn hoá; nền shares_basic bình quân gia quyền (spec 2026-08-30 §3.4.2)"}
+  - {field: cap,               kind: derived, expression: "market_cap / 1e6", oracle: none, authority: "BRAIN Available Market Data -- cap tính bằng triệu"}
+  - {field: amplitude,         kind: derived, expression: "(adj_high - adj_low) / prev_close", oracle: none, authority: "prev_close là lag(adj_close); trộn high/low thô với prev_close đã chuẩn hoá sẽ tạo cú giả qua ranh giới split, cùng loại lỗi returns (spec §5.3)"}
+  - {field: gap_pct,           kind: derived, expression: "(adj_open - prev_close) / prev_close", oracle: none, authority: "prev_close là lag(adj_close); trộn open thô với prev_close đã chuẩn hoá sẽ tạo cú giả qua ranh giới split, cùng loại lỗi returns (spec §5.3)"}
+  - {field: prev_close,        kind: derived, expression: "lag(adj_close) over (partition by symbol order by trade_date)", oracle: none}
+  - {field: adv20,             kind: derived, expression: "avg(adj_volume) over 20 ngày giao dịch, NULL khi chưa đủ 20 quan sát", oracle: none, authority: "BRAIN Available Market Data -- average daily volume in past 20 days"}
+  - {field: sharesout,       kind: gap, reason: "Không có endpoint share count LỊCH SỬ (nợ N-r); snapshot 5 dòng và bình quân gia quyền theo quý đều không phải chuỗi ngày"}
+
+
+  # =========================================================================
+  # 3. Fundamentals (fundamentals.yaml - 48 fields: 31 P, 17 D, 0 X)
+  # =========================================================================
+  # --- Income Statement ---
+  - {field: revenue,           kind: passthrough, model: std_ac_income_statement, column: revenue}
+  - {field: cogs,              kind: passthrough, model: std_ac_income_statement, column: cost_of_revenue}
+  - {field: gross_profit,      kind: derived, expression: "revenue - cost_of_revenue", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: rd_expense,        kind: passthrough, model: std_ac_income_statement, column: research_and_development_expenses}
+  - {field: sga_expense,       kind: passthrough, model: std_ac_income_statement, column: selling_general_and_administrative_expenses}
+  - {field: operating_income,  kind: derived, expression: "revenue - cost_of_revenue - (selling_general_and_administrative_expenses + research_and_development_expenses + other_expenses)", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: interest_expense,  kind: passthrough, model: std_ac_income_statement, column: interest_expense}
+  - {field: pretax_income,     kind: passthrough, model: std_ac_income_statement, column: income_before_tax}
+  - {field: income_tax,        kind: passthrough, model: std_ac_income_statement, column: income_tax_expense}
+  - {field: net_income,        kind: passthrough, model: std_ac_income_statement, column: net_income}
+  - {field: net_income_common, kind: derived, expression: "net_income - net_income_deductions", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: ebitda,            kind: derived, expression: "net_income + interest_expense + income_tax_expense + depreciation_and_amortization", oracle: fixture_only, authority: "SEC Non-GAAP C&DI -- EBIT/EBITDA đối chiếu về net income (Nhóm B, spec §5.2, §7.4)"}
+  - {field: depreciation,      kind: passthrough, model: std_ac_income_statement, column: depreciation_and_amortization}
+  - {field: eps_basic,         kind: derived, expression: "net_income_common / weighted_average_shs_out", oracle: fixture_only, authority: "ASC 260 (Nhóm B, spec §5.2, §7.4)"}
+  - {field: eps_diluted,       kind: derived, expression: "net_income_common / weighted_average_shs_out_dil", oracle: fixture_only, authority: "ASC 260 (Nhóm B, spec §5.2, §7.4)"}
+  - {field: shares_basic,      kind: passthrough, model: std_ac_income_statement, column: weighted_average_shs_out}
+  - {field: shares_diluted,    kind: passthrough, model: std_ac_income_statement, column: weighted_average_shs_out_dil}
+
+  # --- Balance Sheet ---
+  - {field: total_assets,         kind: derived, expression: "cash_and_cash_equivalents + short_term_investments + net_receivables + inventory + prepaids + other_current_assets + property_plant_equipment_net + goodwill + intangible_assets + long_term_investments + tax_assets + other_non_current_assets", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §8.1)"}
+  - {field: current_assets,       kind: derived, expression: "cash_and_cash_equivalents + short_term_investments + net_receivables + inventory + prepaids + other_current_assets", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: cash_equivalents,     kind: derived, expression: "cash_and_cash_equivalents + short_term_investments", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: receivables,          kind: passthrough, model: std_ac_balance_sheet_statement, column: net_receivables}
+  - {field: inventories,          kind: passthrough, model: std_ac_balance_sheet_statement, column: inventory}
+  - {field: other_current_assets, kind: passthrough, model: std_ac_balance_sheet_statement, column: other_current_assets}
+  - {field: non_current_assets,   kind: derived, expression: "property_plant_equipment_net + goodwill + intangible_assets + long_term_investments + tax_assets + other_non_current_assets", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: pp_and_e,             kind: passthrough, model: std_ac_balance_sheet_statement, column: property_plant_equipment_net}
+  - {field: intangibles,          kind: passthrough, model: std_ac_balance_sheet_statement, column: intangible_assets}
+  - {field: goodwill,             kind: passthrough, model: std_ac_balance_sheet_statement, column: goodwill}
+  - {field: total_liabilities,    kind: derived, expression: "account_payables + other_payables + accrued_expenses + short_term_debt + deferred_revenue + other_current_liabilities + long_term_debt + deferred_revenue_non_current + deferred_tax_liabilities_non_current + other_non_current_liabilities + other_liabilities + capital_lease_obligations", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §8.1) -- KHÔNG cộng tax_payables hay capital_lease_obligations_current, đã đối chiếu vendor 0/25 lệch sau khi bỏ (Task 19, 2026-08-26): capital_lease_obligations đã là tổng current+non-current"}
+  - {field: current_liabilities,  kind: derived, expression: "account_payables + other_payables + accrued_expenses + short_term_debt + capital_lease_obligations_current + deferred_revenue + other_current_liabilities", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3) -- KHÔNG cộng tax_payables, đã đối chiếu vendor 0/25 lệch sau khi bỏ (Task 19, 2026-08-26)"}
+  - {field: accounts_payable,     kind: passthrough, model: std_ac_balance_sheet_statement, column: account_payables}
+  - {field: short_term_debt,      kind: passthrough, model: std_ac_balance_sheet_statement, column: short_term_debt}
+  - {field: long_term_debt,       kind: passthrough, model: std_ac_balance_sheet_statement, column: long_term_debt}
+  - {field: total_equity,         kind: derived, expression: "common_stock + preferred_stock + additional_paid_in_capital + retained_earnings + accumulated_other_comprehensive_income_loss + other_total_stockholders_equity + minority_interest + treasury_stock", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §8.1) -- CỘNG treasury_stock (đã âm sẵn trong raw), không trừ; đã đối chiếu vendor 0/25 lệch sau khi sửa dấu (Task 19, 2026-08-26)"}
+  - {field: common_equity,        kind: derived, expression: "common_stock + additional_paid_in_capital + retained_earnings + accumulated_other_comprehensive_income_loss + other_total_stockholders_equity + treasury_stock", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3) -- CỘNG treasury_stock (đã âm sẵn trong raw), không trừ; đã đối chiếu vendor 0/25 lệch sau khi sửa dấu (Task 19, 2026-08-26)"}
+  - {field: retained_earnings,    kind: passthrough, model: std_ac_balance_sheet_statement, column: retained_earnings}
+  - {field: shares_outstanding,   kind: passthrough, model: std_pd_share_count_observation, column: outstanding_shares}
+
+  # --- Cash Flow Statement ---
+  - {field: cfo,                     kind: passthrough, model: std_ac_cash_flow_statement, column: operating_cash_flow}
+  - {field: cfi,                     kind: passthrough, model: std_ac_cash_flow_statement, column: net_cash_provided_by_investing_activities}
+  - {field: cff,                     kind: passthrough, model: std_ac_cash_flow_statement, column: net_cash_provided_by_financing_activities}
+  - {field: capex,                   kind: passthrough, model: std_ac_cash_flow_statement, column: capital_expenditure}
+  - {field: maintenance_capex,       kind: passthrough, model: std_ac_owner_earnings, column: maintenance_capex}
+  - {field: depreciation_cf,         kind: passthrough, model: std_ac_cash_flow_statement, column: depreciation_and_amortization_cash_flow}
+  - {field: stock_based_comp,        kind: passthrough, model: std_ac_cash_flow_statement, column: stock_based_compensation}
+  - {field: changes_working_capital, kind: passthrough, model: std_ac_cash_flow_statement, column: change_in_working_capital}
+  - {field: dividends_paid,          kind: derived, expression: "common_dividends_paid + preferred_dividends_paid", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: share_repurchases,       kind: passthrough, model: std_ac_cash_flow_statement, column: common_stock_repurchased}
+  - {field: net_change_cash,         kind: derived, expression: "operating_cash_flow + net_cash_provided_by_investing_activities + net_cash_provided_by_financing_activities + effect_of_forex_changes_on_cash", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+  - {field: free_cash_flow,          kind: derived, expression: "operating_cash_flow - abs(capital_expenditure)", oracle: vendor_exact, authority: "US GAAP (Nhóm A, spec §5.2, §7.3)"}
+
+  # --- Float Shares ---
+  - {field: float_shares,            kind: passthrough, model: std_pd_share_count_observation, column: float_shares}
+
+  # =========================================================================
+  # 4. Analyst Estimates & Ratings (analyst.yaml - 19 fields: 4 P, 11 D, 4 X)
+  # =========================================================================
+  - {field: num_analysts_eps,        kind: passthrough, model: std_bd_analyst_estimate, column: num_analysts_eps}
+  - {field: eps_estimate_cur_q,      kind: gap, reason: "endpoint /analyst-estimates cấu hình period: annual, không có dòng theo quý"}
+  - {field: eps_estimate_next_q,     kind: gap, reason: "endpoint /analyst-estimates cấu hình period: annual, không có dòng theo quý"}
+  - {field: eps_estimate_cur_y,      kind: derived, expression: "eps_avg where period = 'annual' for current fiscal year", oracle: none}
+  - {field: eps_estimate_next_y,     kind: derived, expression: "eps_avg where period = 'annual' for next fiscal year", oracle: none}
+  - {field: revenue_estimate_cur_q,  kind: gap, reason: "endpoint /analyst-estimates cấu hình period: annual, không có dòng theo quý"}
+  - {field: revenue_estimate_next_q, kind: gap, reason: "endpoint /analyst-estimates cấu hình period: annual, không có dòng theo quý"}
+  - {field: num_analysts_rating,     kind: derived, expression: "sum(analyst_count) over rating buckets", oracle: none}
+  - {field: rating_strong_buy,       kind: derived, expression: "analyst_count where rating_bucket = 'strong_buy'", oracle: none}
+  - {field: rating_buy,              kind: derived, expression: "analyst_count where rating_bucket = 'buy'", oracle: none}
+  - {field: rating_hold,             kind: derived, expression: "analyst_count where rating_bucket = 'hold'", oracle: none}
+  - {field: rating_sell,             kind: derived, expression: "analyst_count where rating_bucket = 'sell'", oracle: none}
+  - {field: rating_strong_sell,      kind: derived, expression: "analyst_count where rating_bucket = 'strong_sell'", oracle: none}
+  - {field: price_target_mean,       kind: passthrough, model: std_bd_price_target_consensus, column: target_consensus}
+  - {field: price_target_high,       kind: passthrough, model: std_bd_price_target_consensus, column: target_high}
+  - {field: price_target_low,        kind: passthrough, model: std_bd_price_target_consensus, column: target_low}
+  - {field: analyst_upgrade_count,   kind: derived, expression: "sum(case when action = 'upgrade' then 1 else 0 end) from std_bd_analyst_grade_action", oracle: none}
+  - {field: analyst_downgrade_count, kind: derived, expression: "sum(case when action = 'downgrade' then 1 else 0 end) from std_bd_analyst_grade_action", oracle: none}
+  - {field: analyst_action_count,    kind: derived, expression: "count(*) from std_bd_analyst_grade_action", oracle: none}
+
+  # =========================================================================
+  # 5. Sector & Classification (dimension.yaml - 6 fields: 6 P, 0 D, 0 X)
+  # =========================================================================
+  - {field: vendor_sector,   kind: passthrough, model: std_ip_legal_entity, column: sector}
+  - {field: vendor_industry, kind: passthrough, model: std_ip_legal_entity, column: industry}
+  - {field: market,          kind: passthrough, model: std_ar_listing, column: market_code}
+  - {field: exchange,        kind: passthrough, model: std_ar_listing, column: exchange_code}
+  - {field: country,         kind: passthrough, model: std_ip_legal_entity, column: country_code}
+  - {field: employee_count,  kind: passthrough, model: std_ip_workforce_observation, column: employee_count}
+  - {field: sector,          kind: passthrough, model: std_ip_legal_entity, column: sector}
+  - {field: industry,        kind: passthrough, model: std_ip_legal_entity, column: industry}
+  - {field: subindustry,     kind: gap, reason: "Không có taxonomy 3 tầng trong bất kỳ nguồn nào"}
+
+
+  # =========================================================================
+  # 6. Macro Economic (macro.yaml - 25 fields: 0 P, 14 D, 11 X)
+  # =========================================================================
+  # --- 8 series from std_cm_macro_observation (filtering series_name) ---
+  - {field: fed_funds_rate,      kind: derived, expression: "observation_value where series_name = 'federalFunds'", oracle: none}
+  - {field: sofr,                kind: gap, reason: "FMP macro series không có SOFR, FRED đã gỡ"}
+  - {field: us_cpi_all,          kind: derived, expression: "observation_value where series_name = 'CPI'", oracle: none}
+  - {field: us_cpi_core,         kind: gap, reason: "FMP macro series không có CPI core, FRED đã gỡ"}
+  - {field: us_pce,              kind: gap, reason: "FMP macro series không có PCE, FRED đã gỡ"}
+  - {field: us_pce_core,         kind: gap, reason: "FMP macro series không có PCE core, FRED đã gỡ"}
+  - {field: us_ppi,              kind: gap, reason: "FMP macro series không có PPI, FRED đã gỡ"}
+  - {field: us_gdp_nominal,      kind: derived, expression: "observation_value where series_name = 'GDP'", oracle: none}
+  - {field: us_gdp_real_growth,  kind: derived, expression: "observation_value where series_name = 'realGDP'", oracle: none}
+  - {field: us_unemployment,     kind: derived, expression: "observation_value where series_name = 'unemploymentRate'", oracle: none}
+  - {field: us_nonfarm_payroll,  kind: derived, expression: "observation_value where series_name = 'totalNonfarmPayroll'", oracle: none}
+  - {field: us_initial_claims,   kind: derived, expression: "observation_value where series_name = 'initialClaims'", oracle: none}
+  - {field: us_ism_manufacturing, kind: gap, reason: "FMP macro series không có ISM Manufacturing, FRED đã gỡ"}
+  - {field: us_retail_sales,     kind: derived, expression: "observation_value where series_name = 'retailSales'", oracle: none}
+
+  # --- 6 Treasury yields from std_cm_treasury_rate (filtering tenor) ---
+  - {field: yield_1m,            kind: derived, expression: "rate where tenor = 'month_1'", oracle: none}
+  - {field: yield_3m,            kind: derived, expression: "rate where tenor = 'month_3'", oracle: none}
+  - {field: yield_2y,            kind: derived, expression: "rate where tenor = 'year_2'", oracle: none}
+  - {field: yield_5y,            kind: derived, expression: "rate where tenor = 'year_5'", oracle: none}
+  - {field: yield_10y,           kind: derived, expression: "rate where tenor = 'year_10'", oracle: none}
+  - {field: yield_30y,           kind: derived, expression: "rate where tenor = 'year_30'", oracle: none}
+
+  # --- Gap items ---
+  - {field: credit_spread_hy,    kind: gap, reason: "FMP không có series credit spread HY, FRED đã gỡ"}
+  - {field: credit_spread_ig,    kind: gap, reason: "FMP không có series credit spread IG, FRED đã gỡ"}
+  - {field: vix,                 kind: gap, reason: "không có contract raw cho mức chỉ số VIX; chỉ có danh sách thành phần"}
+  - {field: sp500_index,         kind: gap, reason: "không có contract raw cho mức chỉ số S&P 500; chỉ có danh sách thành phần"}
+  - {field: dollar_index_dxy,    kind: gap, reason: "không có contract raw cho mức chỉ số US Dollar Index DXY"}
+
+  # =========================================================================
+  # 7. Ratios (ratios.yaml - 78 fields: 0 P, 72 D, 6 X) -- spec 2026-08-27
+  # =========================================================================
+  # --- Gap items ---
+  - {field: short_ratio,                   kind: gap, reason: "phụ thuộc short_interest/avg_daily_volume, chỉ Polygon có, đã gỡ khỏi phạm vi (spec 2026-07-28 §7 :850,923-924)"}
+  - {field: short_float_pct,               kind: gap, reason: "phụ thuộc short_interest, chỉ Polygon có (spec 2026-07-28 :850,923-924)"}
+  - {field: short_interest_change,         kind: gap, reason: "phụ thuộc short_interest, chỉ Polygon có (spec 2026-07-28 :850,923-924)"}
+  - {field: price_target_upside,           kind: gap, reason: "price-target-consensus là snapshot; join vào panel lịch sử tạo look-ahead bias (spec 2026-07-28 :851)"}
+  - {field: eps_revision_1m,               kind: gap, reason: "cần chuỗi consensus EPS thay đổi theo thời gian; /analyst-estimates cấu hình period: annual"}
+  - {field: eps_revision_3m,               kind: gap, reason: "cần chuỗi consensus EPS thay đổi theo thời gian; /analyst-estimates cấu hình period: annual"}
+  - {field: revenue_segment_hhi,           kind: gap, reason: "std_ac_revenue_segment_breakdown có 1 segment_name phân biệt trên 16 dòng/1 symbol -- HHI và tỉ trọng lớn nhất đều bằng 1,0 theo định nghĩa (nợ N-h đợt 3b)"}
+  - {field: top_segment_revenue_share,     kind: gap, reason: "std_ac_revenue_segment_breakdown có 1 segment_name phân biệt trên 16 dòng/1 symbol -- HHI và tỉ trọng lớn nhất đều bằng 1,0 theo định nghĩa (nợ N-h đợt 3b)"}
+
+  # --- B2 Valuation ---
+  - {field: pe_ratio,                      kind: derived, expression: "close / eps_diluted_ttm", oracle: none, authority: "close CHƯA điều chỉnh + giữ diluted (spec 2026-08-27 §3.1); adj_close của catalog là sai hệ quy chiếu"}
+  - {field: pe_ratio_fwd,                  kind: derived, expression: "close / eps_estimate_next_y", oracle: none, authority: "đổi từ adj_close sang close cho đồng hệ với cả nhóm B2 (spec 2026-08-27 §3.1)"}
+  - {field: pb_ratio,                      kind: derived, expression: "market_cap / common_equity", oracle: none}
+  - {field: ps_ratio,                      kind: derived, expression: "market_cap / revenue_ttm", oracle: none}
+  - {field: total_debt,                    kind: derived, expression: "short_term_debt + long_term_debt", oracle: none}
+  - {field: net_debt,                      kind: derived, expression: "total_debt - cash_equivalents", oracle: none}
+  - {field: enterprise_value,              kind: derived, expression: "market_cap + net_debt", oracle: none}
+  - {field: ev_ebitda,                     kind: derived, expression: "enterprise_value / ebitda_ttm", oracle: none}
+  - {field: ev_ebit,                       kind: derived, expression: "enterprise_value / ebit_ttm", oracle: none}
+  - {field: ev_sales,                      kind: derived, expression: "enterprise_value / revenue_ttm", oracle: none}
+  - {field: ev_fcf,                        kind: derived, expression: "enterprise_value / free_cash_flow_ttm", oracle: none}
+  - {field: price_to_fcf,                  kind: derived, expression: "market_cap / free_cash_flow_ttm", oracle: none}
+  - {field: price_to_cfo,                  kind: derived, expression: "market_cap / cfo_ttm", oracle: none}
+  - {field: book_value_per_share,          kind: derived, expression: "common_equity / shares_basic", oracle: none}
+
+  # --- B3 Profitability ---
+  - {field: gross_margin,                  kind: derived, expression: "gross_profit / revenue", oracle: none}
+  - {field: operating_margin,              kind: derived, expression: "operating_income / revenue", oracle: none}
+  - {field: ebitda_margin,                 kind: derived, expression: "ebitda / revenue", oracle: none}
+  - {field: net_margin,                    kind: derived, expression: "net_income / revenue", oracle: none}
+  - {field: net_margin_common,             kind: derived, expression: "net_income_common / revenue", oracle: none}
+  - {field: fcf_margin,                    kind: derived, expression: "(cfo + capex) / revenue", oracle: none}
+  - {field: rd_intensity,                  kind: derived, expression: "rd_expense / revenue", oracle: none}
+  - {field: sga_intensity,                 kind: derived, expression: "sga_expense / revenue", oracle: none}
+  - {field: tax_rate_effective,            kind: derived, expression: "income_tax / pretax_income", oracle: none}
+  - {field: interest_burden,               kind: derived, expression: "pretax_income / operating_income", oracle: none}
+
+  # --- B4 Return on Capital ---
+  - {field: roe,                           kind: derived, expression: "net_income_ttm / avg_common_equity", oracle: none}
+  - {field: roa,                           kind: derived, expression: "net_income_ttm / avg_total_assets", oracle: none}
+  - {field: roic,                          kind: derived, expression: "nopat / avg_invested_capital", oracle: none}
+  - {field: nopat,                         kind: derived, expression: "ebit_ttm * (1 - tax_rate_effective)", oracle: none, authority: "ebit_ttm chứ không phải operating_income (spec 2026-08-27 §3.4)"}
+  - {field: invested_capital,              kind: derived, expression: "total_equity + total_debt - cash_equivalents", oracle: none}
+  - {field: roce,                          kind: derived, expression: "ebit_ttm / avg(total_assets - current_liabilities)", oracle: none}
+  - {field: gross_profit_on_assets,        kind: derived, expression: "gross_profit_ttm / avg_total_assets", oracle: none}
+
+  # --- B5 Leverage & Solvency ---
+  - {field: debt_to_equity,                kind: derived, expression: "total_debt / common_equity", oracle: none}
+  - {field: debt_to_assets,                kind: derived, expression: "total_debt / total_assets", oracle: none}
+  - {field: net_debt_to_ebitda,            kind: derived, expression: "net_debt / ebitda_ttm", oracle: none}
+  - {field: net_debt_to_equity,            kind: derived, expression: "net_debt / common_equity", oracle: none}
+  - {field: interest_coverage,             kind: derived, expression: "ebit_ttm / abs(interest_expense_ttm)", oracle: none}
+  - {field: equity_multiplier,             kind: derived, expression: "total_assets / common_equity", oracle: none}
+  - {field: altman_z_score,                kind: derived, expression: "1.2*wc/ta + 1.4*re/ta + 3.3*ebit_ttm/ta + 0.6*mcap/tl + 1.0*revenue_ttm/ta, NULL nếu vendor_sector = 'Financial Services'", oracle: none, authority: "loại công ty tài chính (spec 2026-07-28 :772); X3/X5 phải dùng _ttm"}
+
+  # --- B6 Liquidity ---
+  - {field: current_ratio,                 kind: derived, expression: "current_assets / current_liabilities", oracle: none}
+  - {field: quick_ratio,                   kind: derived, expression: "(current_assets - inventories) / current_liabilities", oracle: none}
+  - {field: cash_ratio,                    kind: derived, expression: "cash_only / current_liabilities", oracle: none, authority: "cash_only, KHÔNG cash_equivalents (đã gồm short_term_investments) -- spec 2026-08-27 §3.4b"}
+  - {field: working_capital,               kind: derived, expression: "current_assets - current_liabilities", oracle: none}
+  - {field: working_capital_to_assets,     kind: derived, expression: "working_capital / total_assets", oracle: none}
+
+  # --- B7 Efficiency ---
+  - {field: asset_turnover,                kind: derived, expression: "revenue_ttm / avg_total_assets", oracle: none}
+  - {field: inventory_turnover,            kind: derived, expression: "cogs_ttm / avg_inventories", oracle: none}
+  - {field: receivables_turnover,          kind: derived, expression: "revenue_ttm / avg_receivables", oracle: none}
+  - {field: payables_turnover,             kind: derived, expression: "cogs_ttm / avg_accounts_payable", oracle: none}
+  - {field: days_inventory_outstanding,    kind: derived, expression: "365 / inventory_turnover", oracle: none}
+  - {field: days_sales_outstanding,        kind: derived, expression: "365 / receivables_turnover", oracle: none}
+  - {field: days_payable_outstanding,      kind: derived, expression: "365 / payables_turnover", oracle: none}
+  - {field: cash_conversion_cycle,         kind: derived, expression: "days_sales_outstanding + days_inventory_outstanding - days_payable_outstanding", oracle: none}
+  - {field: fixed_asset_turnover,          kind: derived, expression: "revenue_ttm / avg_pp_and_e", oracle: none}
+
+  # --- B8 Growth Rates ---
+  - {field: revenue_growth_yoy,            kind: derived, expression: "revenue[Q] / revenue[Q-4] - 1", oracle: none}
+  - {field: revenue_growth_qoq,            kind: derived, expression: "revenue[Q] / revenue[Q-1] - 1", oracle: none}
+  - {field: gross_profit_growth_yoy,       kind: derived, expression: "gross_profit[Q] / gross_profit[Q-4] - 1", oracle: none}
+  - {field: net_income_growth_yoy,         kind: derived, expression: "net_income[Q] / net_income[Q-4] - 1", oracle: none}
+  - {field: eps_growth_yoy,                kind: derived, expression: "eps_diluted[Q] / eps_diluted[Q-4] - 1", oracle: none}
+  - {field: ebitda_growth_yoy,             kind: derived, expression: "ebitda[Q] / ebitda[Q-4] - 1", oracle: none}
+  - {field: fcf_growth_yoy,                kind: derived, expression: "free_cash_flow[Q] / free_cash_flow[Q-4] - 1", oracle: none}
+  - {field: total_assets_growth_yoy,       kind: derived, expression: "total_assets[Q] / total_assets[Q-4] - 1", oracle: none}
+  - {field: shares_growth_yoy,             kind: derived, expression: "shares_diluted[Q] / shares_diluted[Q-4] - 1", oracle: none}
+
+  # --- B9 Cash Flow Quality ---
+  - {field: cfo_to_net_income,             kind: derived, expression: "cfo / net_income", oracle: none}
+  - {field: accruals_ratio,                kind: derived, expression: "(net_income_ttm - cfo_ttm) / avg_total_assets", oracle: none, authority: "tử số phải dùng _ttm để cùng grain với mẫu số TTM-average, cùng nguyên lý altman_z_score X3/X5 -- sửa trong review toàn nhánh cuối plan, 2026-08-27"}
+  - {field: fcf_to_earnings,               kind: derived, expression: "free_cash_flow / net_income", oracle: none}
+  - {field: capex_to_revenue,              kind: derived, expression: "abs(capex) / revenue", oracle: none}
+  - {field: capex_to_depreciation,         kind: derived, expression: "abs(capex) / depreciation_cf", oracle: none}
+  - {field: stock_comp_to_revenue,         kind: derived, expression: "stock_based_comp / revenue", oracle: none}
+  - {field: owner_earnings,                kind: derived, expression: "cfo_ttm - maintenance_capex_ttm", oracle: none, authority: "Buffett owner earnings = cfo_ttm - maintenance_capex_ttm; maintenance_capex_ttm có ngưỡng chặn riêng đếm kỳ có giá trị (spec §3.3)"}
+
+  # --- B10 Earnings Surprise ---
+  - {field: earnings_surprise_pct,         kind: derived, expression: "(eps_actual - eps_estimate) / abs(eps_estimate)", oracle: none}
+  - {field: earnings_surprise_sign,        kind: derived, expression: "sign(eps_actual - eps_estimate)", oracle: none}
+  - {field: revenue_surprise_pct,          kind: derived, expression: "(revenue_actual - revenue_estimate) / abs(revenue_estimate)", oracle: none}
+  - {field: standardized_unexpected_earnings, kind: derived, expression: "(eps_actual[Q] - eps_actual[Q-4]) / stddev(eps_actual[q] - eps_actual[q-4], 8)", oracle: none}
+
+  # --- B11 Analyst ---
+  - {field: analyst_consensus_score,       kind: derived, expression: "(rating_strong_buy*2 + rating_buy*1 + rating_hold*0 + rating_sell*-1 + rating_strong_sell*-2) / num_analysts_rating", oracle: none}
+  - {field: revenue_per_employee,          kind: derived, expression: "revenue_ttm / employee_count", oracle: none}
+
+  # =========================================================================
+  # 8. Security Ratings (rating.yaml - 8 fields: 0 P, 0 D, 8 X) -- spec 2026-08-30
+  # =========================================================================
+  - {field: security_rating,      kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_overall, kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_dcf,     kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_roe,     kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_roa,     kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_de,      kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_pe,      kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}
+  - {field: rating_score_pb,      kind: gap, reason: "std_gr_security_rating* chỉ có 1 rating_date (2026-08-17, đo 2026-08-30) -- snapshot, join vào panel lịch sử tạo look-ahead bias; cùng lý do price_target_upside"}

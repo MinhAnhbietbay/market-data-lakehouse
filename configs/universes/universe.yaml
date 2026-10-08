@@ -1,0 +1,9 @@
+market: US
+benchmark: SPY
+symbols:
+  - AAPL
+  - MSFT
+  - NVDA
+  - AMZN
+  - META
+start_date: "2016-10-01"

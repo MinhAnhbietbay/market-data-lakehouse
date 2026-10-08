@@ -1,0 +1,14 @@
+# Điểm xếp hạng thuật toán của FMP -- KHÔNG phải ý kiến nhà phân tích (nhóm đó ở
+# analyst.yaml). Toàn bộ 8 field hiện là gap: std_gr_security_rating* chỉ có ĐÚNG
+# một rating_date (2026-08-17, đo 2026-08-30), tức snapshot chứ không phải chuỗi
+# lịch sử -- nối vào panel 30 năm là look-ahead. Cùng lý do đã dùng cho
+# price_target_upside. File toàn-gap này theo đúng tiền lệ short_interest.yaml.
+fields:
+  - {name: security_rating,      value_type: group_field,    grain: group_daily,  mart_column: security_rating,      sign: signed, pit_semantics: observation, description: "Hạng chữ tổng hợp của FMP (đo: A-, B+, B)"}
+  - {name: rating_score_overall, value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_overall, sign: signed, pit_semantics: observation, description: "Điểm tổng hợp"}
+  - {name: rating_score_dcf,     value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_dcf,     sign: signed, pit_semantics: observation, description: "Điểm theo dòng tiền chiết khấu"}
+  - {name: rating_score_roe,     value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_roe,     sign: signed, pit_semantics: observation, description: "Điểm theo ROE"}
+  - {name: rating_score_roa,     value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_roa,     sign: signed, pit_semantics: observation, description: "Điểm theo ROA"}
+  - {name: rating_score_de,      value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_de,      sign: signed, pit_semantics: observation, description: "Điểm theo nợ trên vốn chủ"}
+  - {name: rating_score_pe,      value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_pe,      sign: signed, pit_semantics: observation, description: "Điểm theo P/E"}
+  - {name: rating_score_pb,      value_type: numeric_matrix, grain: symbol_daily, mart_column: rating_score_pb,      sign: signed, pit_semantics: observation, description: "Điểm theo P/B"}

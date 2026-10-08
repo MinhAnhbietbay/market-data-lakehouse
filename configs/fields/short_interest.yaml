@@ -1,0 +1,6 @@
+# field.md Group A6: Short Interest (FINRA, bi-weekly settlement)
+fields:
+  - {name: short_interest,       value_type: numeric_matrix, grain: symbol_daily, mart_column: short_interest,       unit: shares, dsl_unit: "CSShare:1", sign: signed, pit_semantics: observation, description: "Total shares currently sold short"}
+  - {name: short_interest_prev,  value_type: numeric_matrix, grain: symbol_daily, mart_column: short_interest_prev,  unit: shares, dsl_unit: "CSShare:1", sign: signed, pit_semantics: observation, description: "Short interest from the prior settlement period"}
+  - {name: avg_daily_volume,     value_type: numeric_matrix, grain: symbol_daily, mart_column: avg_daily_volume,     unit: shares, dsl_unit: "CSPrice:1,CSShare:1", sign: signed, pit_semantics: observation, description: "30-day average trading volume, as reported by FINRA"}
+

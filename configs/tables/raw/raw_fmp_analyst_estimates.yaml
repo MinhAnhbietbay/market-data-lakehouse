@@ -1,0 +1,34 @@
+version: 1
+table: lakehouse.raw.raw_fmp_analyst_estimates
+layer: raw
+format: iceberg
+contract: contracts/raw/fmp/raw_fmp_analyst_estimates.schema.yaml
+
+ownership:
+  owner: data-platform
+
+data_profile:
+  primary_time_column: estimate_period_end_date
+  entity_keys:
+    - symbol
+  estimated_volume: low
+  query_patterns:
+    - symbol_filter
+    - date_range
+
+write:
+  mode: overwrite-partitions
+
+# B1 (soát 2026-08-18): partition theo run_date -- mỗi partition là snapshot của
+# một ngày chạy ETL. `overwritePartitions()` chỉ thay lát của chính run đó, nên một
+# run thủng (vài symbol/series 402) không còn xoá được lịch sử của thực thể vắng
+# mặt, mà chạy lại cùng run_date vẫn idempotent. Trùng với DEFAULT_PARTITION_SPEC
+# trong pipelines/raw/table_config.py.
+partition_strategy:
+  mode: manual
+  spec:
+    - transform: identity
+      column: run_date
+
+table_properties:
+  format-version: "2"

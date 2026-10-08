@@ -1,0 +1,106 @@
+# field.md Group B2..B11: fundamental-derived ratios/signals, materialized daily (Gold layer)
+# with point-in-time fundamental forward-fill from publish_date.
+# Note: B9's `free_cash_flow` is intentionally omitted here — it's already declared in
+# fundamentals.yaml (from A4); field.md marks the B9 copy as a redundant reconciliation-only entry.
+fields:
+  # B2: Valuation Ratios (inputs: market_cap (B1) + A2/A3/A4 fundamentals)
+  - {name: pe_ratio,             value_type: numeric_matrix, grain: symbol_daily, mart_column: pe_ratio,             unit: x,             sign: signed, pit_semantics: observation, description: "Price-to-Earnings = close / eps_diluted_ttm"}
+  - {name: pe_ratio_fwd,         value_type: numeric_matrix, grain: symbol_daily, mart_column: pe_ratio_fwd,         unit: x,             sign: signed, pit_semantics: observation, description: "Forward P/E = close / eps_estimate_next_y"}
+  - {name: pb_ratio,             value_type: numeric_matrix, grain: symbol_daily, mart_column: pb_ratio,             unit: x,             sign: signed, pit_semantics: observation, description: "Price-to-Book = market_cap / common_equity"}
+  - {name: ps_ratio,             value_type: numeric_matrix, grain: symbol_daily, mart_column: ps_ratio,             unit: x,             sign: signed, pit_semantics: observation, description: "Price-to-Sales = market_cap / revenue_ttm"}
+  - {name: total_debt,           value_type: numeric_matrix, grain: symbol_daily, mart_column: total_debt,          unit: USD,           sign: signed, pit_semantics: observation, description: "Total interest-bearing debt = short_term_debt + long_term_debt"}
+  - {name: net_debt,             value_type: numeric_matrix, grain: symbol_daily, mart_column: net_debt,            unit: USD,           sign: signed, pit_semantics: observation, description: "Net debt = total_debt - cash_equivalents"}
+  - {name: enterprise_value,     value_type: numeric_matrix, grain: symbol_daily, mart_column: enterprise_value,    unit: USD,           sign: signed, pit_semantics: observation, description: "Enterprise value = market_cap + net_debt"}
+  - {name: ev_ebitda,            value_type: numeric_matrix, grain: symbol_daily, mart_column: ev_ebitda,           unit: x,             sign: signed, pit_semantics: observation, description: "EV/EBITDA, common M&A valuation multiple"}
+  - {name: ev_ebit,              value_type: numeric_matrix, grain: symbol_daily, mart_column: ev_ebit,             unit: x,             sign: signed, pit_semantics: observation, description: "EV/EBIT"}
+  - {name: ev_sales,             value_type: numeric_matrix, grain: symbol_daily, mart_column: ev_sales,            unit: x,             sign: signed, pit_semantics: observation, description: "EV/Sales"}
+  - {name: ev_fcf,                value_type: numeric_matrix, grain: symbol_daily, mart_column: ev_fcf,              unit: x,             sign: signed, pit_semantics: observation, description: "EV/FCF"}
+  - {name: price_to_fcf,          value_type: numeric_matrix, grain: symbol_daily, mart_column: price_to_fcf,        unit: x,             sign: signed, pit_semantics: observation, description: "Price-to-Free-Cash-Flow"}
+  - {name: price_to_cfo,          value_type: numeric_matrix, grain: symbol_daily, mart_column: price_to_cfo,        unit: x,             sign: signed, pit_semantics: observation, description: "Price-to-Operating-Cash-Flow"}
+  - {name: book_value_per_share,  value_type: numeric_matrix, grain: symbol_daily, mart_column: book_value_per_share, unit: USD_per_share, dsl_unit: "CSShare:-1", sign: signed, pit_semantics: observation, description: "Book value per share = common_equity / shares_basic (nền shares_basic = bình quân gia quyền trong kỳ, không phải cổ phiếu lưu hành cuối kỳ, xem spec 2026-08-30 §3.4.2)"}
+
+  # B3: Profitability
+  - {name: gross_margin,        value_type: numeric_matrix, grain: symbol_daily, mart_column: gross_margin,        unit: percent, sign: signed, pit_semantics: observation, description: "Gross margin = gross_profit / revenue"}
+  - {name: operating_margin,    value_type: numeric_matrix, grain: symbol_daily, mart_column: operating_margin,    unit: percent, sign: signed, pit_semantics: observation, description: "Operating (EBIT) margin = operating_income / revenue"}
+  - {name: ebitda_margin,       value_type: numeric_matrix, grain: symbol_daily, mart_column: ebitda_margin,       unit: percent, sign: signed, pit_semantics: observation, description: "EBITDA margin = ebitda / revenue"}
+  - {name: net_margin,          value_type: numeric_matrix, grain: symbol_daily, mart_column: net_margin,          unit: percent, sign: signed, pit_semantics: observation, description: "Net margin = net_income / revenue"}
+  - {name: net_margin_common,   value_type: numeric_matrix, grain: symbol_daily, mart_column: net_margin_common,   unit: percent, sign: signed, pit_semantics: observation, description: "Net margin attributable to common shareholders"}
+  - {name: fcf_margin,          value_type: numeric_matrix, grain: symbol_daily, mart_column: fcf_margin,          unit: percent, sign: signed, pit_semantics: observation, description: "FCF margin = (cfo + capex) / revenue"}
+  - {name: rd_intensity,        value_type: numeric_matrix, grain: symbol_daily, mart_column: rd_intensity,        unit: percent, sign: signed, pit_semantics: observation, description: "R&D spend as a fraction of revenue"}
+  - {name: sga_intensity,       value_type: numeric_matrix, grain: symbol_daily, mart_column: sga_intensity,       unit: percent, sign: signed, pit_semantics: observation, description: "SG&A spend as a fraction of revenue"}
+  - {name: tax_rate_effective,  value_type: numeric_matrix, grain: symbol_daily, mart_column: tax_rate_effective,  unit: percent, sign: signed, pit_semantics: observation, description: "Effective tax rate = income_tax / pretax_income"}
+  - {name: interest_burden,     value_type: numeric_matrix, grain: symbol_daily, mart_column: interest_burden,     unit: ratio,   sign: signed, pit_semantics: observation, description: "pretax_income / operating_income; <1 indicates material interest expense"}
+
+  # B4: Return on Capital
+  - {name: roe,                     value_type: numeric_matrix, grain: symbol_daily, mart_column: roe,                     unit: percent, sign: signed, pit_semantics: observation, description: "Return on Equity (annualized) = net_income_ttm / avg_common_equity"}
+  - {name: roa,                     value_type: numeric_matrix, grain: symbol_daily, mart_column: roa,                     unit: percent, sign: signed, pit_semantics: observation, description: "Return on Assets = net_income_ttm / avg_total_assets"}
+  - {name: roic,                    value_type: numeric_matrix, grain: symbol_daily, mart_column: roic,                    unit: percent, sign: signed, pit_semantics: observation, description: "Return on Invested Capital = nopat / avg_invested_capital"}
+  - {name: nopat,                   value_type: numeric_matrix, grain: symbol_daily, mart_column: nopat,                   unit: USD,     sign: signed, pit_semantics: observation, description: "Net operating profit after tax = ebit_ttm * (1 - tax_rate_effective)"}
+  - {name: invested_capital,        value_type: numeric_matrix, grain: symbol_daily, mart_column: invested_capital,        unit: USD,     sign: signed, pit_semantics: observation, description: "Capital invested in operations = total_equity + total_debt - cash_equivalents"}
+  - {name: roce,                    value_type: numeric_matrix, grain: symbol_daily, mart_column: roce,                    unit: percent, sign: signed, pit_semantics: observation, description: "Return on Capital Employed = operating_income_ttm / (total_assets - current_liabilities)"}
+  - {name: gross_profit_on_assets,  value_type: numeric_matrix, grain: symbol_daily, mart_column: gross_profit_on_assets,  unit: percent, sign: signed, pit_semantics: observation, description: "Greenblatt asset-based profitability = gross_profit_ttm / total_assets"}
+
+  # B5: Leverage & Solvency
+  - {name: debt_to_equity,      value_type: numeric_matrix, grain: symbol_daily, mart_column: debt_to_equity,      unit: ratio,  sign: signed, pit_semantics: observation, description: "total_debt / common_equity"}
+  - {name: debt_to_assets,      value_type: numeric_matrix, grain: symbol_daily, mart_column: debt_to_assets,      unit: ratio,  sign: signed, pit_semantics: observation, description: "total_debt / total_assets"}
+  - {name: net_debt_to_ebitda,  value_type: numeric_matrix, grain: symbol_daily, mart_column: net_debt_to_ebitda,  unit: x,      sign: signed, pit_semantics: observation, description: "Years of EBITDA needed to repay net debt"}
+  - {name: net_debt_to_equity,  value_type: numeric_matrix, grain: symbol_daily, mart_column: net_debt_to_equity,  unit: ratio,  sign: signed, pit_semantics: observation, description: "Gearing ratio = net_debt / common_equity"}
+  - {name: interest_coverage,   value_type: numeric_matrix, grain: symbol_daily, mart_column: interest_coverage,   unit: x,      sign: signed, pit_semantics: observation, description: "Ability to service interest = operating_income_ttm / interest_expense_ttm"}
+  - {name: equity_multiplier,   value_type: numeric_matrix, grain: symbol_daily, mart_column: equity_multiplier,   unit: x,      sign: signed, pit_semantics: observation, description: "Asset leverage component of DuPont = total_assets / common_equity"}
+  - {name: altman_z_score,      value_type: numeric_matrix, grain: symbol_daily, mart_column: altman_z_score,      unit: score,  sign: signed, pit_semantics: observation, description: "Altman Z-score bankruptcy prediction index; NULL cho vendor_sector = 'Financial Services'"}
+
+  # B6: Liquidity
+  - {name: current_ratio,              value_type: numeric_matrix, grain: symbol_daily, mart_column: current_ratio,              unit: ratio, sign: signed, pit_semantics: observation, description: "Short-term liquidity = current_assets / current_liabilities"}
+  - {name: quick_ratio,                value_type: numeric_matrix, grain: symbol_daily, mart_column: quick_ratio,                unit: ratio, sign: signed, pit_semantics: observation, description: "Acid-test liquidity = (current_assets - inventories) / current_liabilities"}
+  - {name: cash_ratio,                 value_type: numeric_matrix, grain: symbol_daily, mart_column: cash_ratio,                 unit: ratio, sign: signed, pit_semantics: observation, description: "cash_and_cash_equivalents / current_liabilities (không gồm short-term investments)"}
+  - {name: working_capital,            value_type: numeric_matrix, grain: symbol_daily, mart_column: working_capital,            unit: USD,   sign: signed, pit_semantics: observation, description: "current_assets - current_liabilities"}
+  - {name: working_capital_to_assets,  value_type: numeric_matrix, grain: symbol_daily, mart_column: working_capital_to_assets,  unit: ratio, sign: signed, pit_semantics: observation, description: "Component of the Altman Z-score"}
+
+  # B7: Efficiency
+  - {name: asset_turnover,               value_type: numeric_matrix, grain: symbol_daily, mart_column: asset_turnover,               unit: ratio, sign: signed, pit_semantics: observation, description: "How efficiently assets generate revenue = revenue_ttm / avg_total_assets"}
+  - {name: inventory_turnover,           value_type: numeric_matrix, grain: symbol_daily, mart_column: inventory_turnover,           unit: ratio, sign: signed, pit_semantics: observation, description: "Speed of inventory turnover = cogs_ttm / avg_inventories"}
+  - {name: receivables_turnover,         value_type: numeric_matrix, grain: symbol_daily, mart_column: receivables_turnover,         unit: ratio, sign: signed, pit_semantics: observation, description: "Speed of collections = revenue_ttm / avg_receivables"}
+  - {name: payables_turnover,            value_type: numeric_matrix, grain: symbol_daily, mart_column: payables_turnover,            unit: ratio, sign: signed, pit_semantics: observation, description: "Speed of paying suppliers = cogs_ttm / avg_accounts_payable"}
+  - {name: days_inventory_outstanding,   value_type: numeric_matrix, grain: symbol_daily, mart_column: days_inventory_outstanding,   unit: days,  sign: signed, pit_semantics: observation, description: "Average days inventory is held (DIO)"}
+  - {name: days_sales_outstanding,       value_type: numeric_matrix, grain: symbol_daily, mart_column: days_sales_outstanding,       unit: days,  sign: signed, pit_semantics: observation, description: "Average days to collect receivables (DSO)"}
+  - {name: days_payable_outstanding,     value_type: numeric_matrix, grain: symbol_daily, mart_column: days_payable_outstanding,     unit: days,  sign: signed, pit_semantics: observation, description: "Average days to pay suppliers (DPO)"}
+  - {name: cash_conversion_cycle,        value_type: numeric_matrix, grain: symbol_daily, mart_column: cash_conversion_cycle,        unit: days,  sign: signed, pit_semantics: observation, description: "Cash conversion cycle = DSO + DIO - DPO; lower is better"}
+  - {name: fixed_asset_turnover,         value_type: numeric_matrix, grain: symbol_daily, mart_column: fixed_asset_turnover,         unit: ratio, sign: signed, pit_semantics: observation, description: "revenue_ttm / avg_pp_and_e"}
+
+  # B8: Growth Rates
+  - {name: revenue_growth_yoy,      value_type: numeric_matrix, grain: symbol_daily, mart_column: revenue_growth_yoy,      unit: percent, sign: signed, pit_semantics: observation, description: "Revenue growth vs. same quarter last year"}
+  - {name: revenue_growth_qoq,      value_type: numeric_matrix, grain: symbol_daily, mart_column: revenue_growth_qoq,      unit: percent, sign: signed, pit_semantics: observation, description: "Revenue growth vs. prior quarter"}
+  - {name: gross_profit_growth_yoy, value_type: numeric_matrix, grain: symbol_daily, mart_column: gross_profit_growth_yoy, unit: percent, sign: signed, pit_semantics: observation, description: "Gross profit growth YoY"}
+  - {name: net_income_growth_yoy,   value_type: numeric_matrix, grain: symbol_daily, mart_column: net_income_growth_yoy,   unit: percent, sign: signed, pit_semantics: observation, description: "Net income growth YoY"}
+  - {name: eps_growth_yoy,          value_type: numeric_matrix, grain: symbol_daily, mart_column: eps_growth_yoy,          unit: percent, sign: signed, pit_semantics: observation, description: "Diluted EPS growth YoY"}
+  - {name: ebitda_growth_yoy,       value_type: numeric_matrix, grain: symbol_daily, mart_column: ebitda_growth_yoy,       unit: percent, sign: signed, pit_semantics: observation, description: "EBITDA growth YoY"}
+  - {name: fcf_growth_yoy,          value_type: numeric_matrix, grain: symbol_daily, mart_column: fcf_growth_yoy,          unit: percent, sign: signed, pit_semantics: observation, description: "Free cash flow growth YoY"}
+  - {name: total_assets_growth_yoy, value_type: numeric_matrix, grain: symbol_daily, mart_column: total_assets_growth_yoy, unit: percent, sign: signed, pit_semantics: observation, description: "Total assets growth YoY (accrual signal)"}
+  - {name: shares_growth_yoy,       value_type: numeric_matrix, grain: symbol_daily, mart_column: shares_growth_yoy,       unit: percent, sign: signed, pit_semantics: observation, description: "Diluted share count growth YoY (dilution signal)"}
+
+  # B9: Cash Flow Quality (free_cash_flow itself lives in fundamentals.yaml, from A4)
+  - {name: cfo_to_net_income,     value_type: numeric_matrix, grain: symbol_daily, mart_column: cfo_to_net_income,     unit: ratio,   sign: signed, pit_semantics: observation, description: "Cash conversion of earnings = cfo / net_income; >1 indicates high quality earnings"}
+  - {name: accruals_ratio,        value_type: numeric_matrix, grain: symbol_daily, mart_column: accruals_ratio,        unit: ratio,   sign: signed, pit_semantics: observation, description: "Sloan accruals ratio = (net_income - cfo) / avg_total_assets; high values indicate lower earnings quality"}
+  - {name: fcf_to_earnings,       value_type: numeric_matrix, grain: symbol_daily, mart_column: fcf_to_earnings,       unit: ratio,   sign: signed, pit_semantics: observation, description: "free_cash_flow / net_income"}
+  - {name: capex_to_revenue,      value_type: numeric_matrix, grain: symbol_daily, mart_column: capex_to_revenue,      unit: percent, sign: signed, pit_semantics: observation, description: "Capital intensity = abs(capex) / revenue"}
+  - {name: capex_to_depreciation, value_type: numeric_matrix, grain: symbol_daily, mart_column: capex_to_depreciation, unit: ratio,   sign: signed, pit_semantics: observation, description: "abs(capex) / depreciation_cf; >1 expanding, <1 contracting investment"}
+  - {name: stock_comp_to_revenue, value_type: numeric_matrix, grain: symbol_daily, mart_column: stock_comp_to_revenue, unit: percent, sign: signed, pit_semantics: observation, description: "Stock-based comp dilution intensity = stock_based_comp / revenue"}
+  - {name: owner_earnings,        value_type: numeric_matrix, grain: symbol_daily, mart_column: owner_earnings,        unit: USD,     sign: signed, pit_semantics: observation, description: "Buffett owner earnings = cfo_ttm - maintenance_capex_ttm"}
+
+  # B10: Earnings Surprise (inputs: eps_actual/eps_estimate from A5.3 & A7)
+  - {name: earnings_surprise_pct,               value_type: numeric_matrix, grain: symbol_daily, mart_column: earnings_surprise_pct,               unit: percent, sign: signed, pit_semantics: observation, description: "% surprise in reported EPS vs. estimate"}
+  - {name: earnings_surprise_sign,               value_type: numeric_matrix, grain: symbol_daily, mart_column: earnings_surprise_sign,                              sign: signed, pit_semantics: observation, description: "Direction of surprise: +1 beat, -1 miss"}
+  - {name: revenue_surprise_pct,                  value_type: numeric_matrix, grain: symbol_daily, mart_column: revenue_surprise_pct,                  unit: percent, sign: signed, pit_semantics: observation, description: "% surprise in reported revenue vs. estimate"}
+  - {name: standardized_unexpected_earnings,      value_type: numeric_matrix, grain: symbol_daily, mart_column: standardized_unexpected_earnings,                     sign: signed, pit_semantics: observation, description: "SUE, the Post-Earnings-Announcement-Drift signal"}
+  - {name: eps_revision_1m,                       value_type: numeric_matrix, grain: symbol_daily, mart_column: eps_revision_1m,                       unit: percent, sign: signed, pit_semantics: observation, description: "Change in consensus EPS estimate over the last month"}
+  - {name: eps_revision_3m,                       value_type: numeric_matrix, grain: symbol_daily, mart_column: eps_revision_3m,                       unit: percent, sign: signed, pit_semantics: observation, description: "Change in consensus EPS estimate over the last quarter"}
+
+  # B11: Derived from Short Interest & Analyst
+  - {name: short_ratio,               value_type: numeric_matrix, grain: symbol_daily, mart_column: short_ratio,               unit: days,    sign: signed, pit_semantics: observation, description: "Days-to-cover = short_interest / avg_daily_volume"}
+  - {name: short_float_pct,           value_type: numeric_matrix, grain: symbol_daily, mart_column: short_float_pct,           unit: percent, sign: signed, pit_semantics: observation, description: "% of float shorted = short_interest / float_shares"}
+  - {name: short_interest_change,     value_type: numeric_matrix, grain: symbol_daily, mart_column: short_interest_change,     unit: percent, sign: signed, pit_semantics: observation, description: "Change in short interest vs. prior settlement period"}
+  - {name: analyst_consensus_score,   value_type: numeric_matrix, grain: symbol_daily, mart_column: analyst_consensus_score,   unit: score,   sign: signed, pit_semantics: observation, description: "Weighted analyst consensus score, from -2 (strong sell) to +2 (strong buy)"}
+  - {name: price_target_upside,       value_type: numeric_matrix, grain: symbol_daily, mart_column: price_target_upside,       unit: percent, sign: signed, pit_semantics: observation, description: "% upside to mean analyst price target vs. adj_close; hiện là gap -- snapshot, join vào panel lịch sử tạo look-ahead bias"}
+  - {name: revenue_per_employee,      value_type: numeric_matrix, grain: symbol_daily, mart_column: revenue_per_employee,      unit: USD,     sign: signed, pit_semantics: observation, description: "Revenue per employee = revenue_ttm / employee_count"}
+  - {name: revenue_segment_hhi,       value_type: numeric_matrix, grain: symbol_daily, mart_column: revenue_segment_hhi,       unit: ratio,   sign: signed, pit_semantics: observation, description: "Herfindahl-Hirschman Index for revenue segment concentration; hiện là gap -- 1 segment_name phân biệt (nợ N-h đợt 3b)"}
+  - {name: top_segment_revenue_share, value_type: numeric_matrix, grain: symbol_daily, mart_column: top_segment_revenue_share, unit: ratio,   sign: signed, pit_semantics: observation, description: "Revenue share of top segment; hiện là gap -- 1 segment_name phân biệt (nợ N-h đợt 3b)"}

@@ -1,0 +1,28 @@
+version: 1
+table: lakehouse.raw.raw_fmp_available_countries
+layer: raw
+format: iceberg
+contract: contracts/raw/fmp/raw_fmp_available_countries.schema.yaml
+
+ownership:
+  owner: data-platform
+
+data_profile:
+  primary_time_column: run_date
+  entity_keys:
+    - country
+  estimated_volume: low
+  query_patterns:
+    - full_scan
+
+write:
+  mode: overwrite-partitions
+
+partition_strategy:
+  mode: manual
+  spec:
+    - transform: identity
+      column: run_date
+
+table_properties:
+  format-version: "2"

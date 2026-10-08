@@ -1,0 +1,9 @@
+environment: dev
+object_store:
+  endpoint: http://localhost:9000
+  bucket: alpha-lakehouse
+postgres:
+  host: localhost
+  port: 5432
+redis:
+  url: redis://localhost:6379/0
