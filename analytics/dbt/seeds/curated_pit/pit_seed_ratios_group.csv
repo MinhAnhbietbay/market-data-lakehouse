@@ -1,0 +1,6 @@
+date,symbol,vendor_sector,employee_count
+2024-01-02,VAL,Technology,1000
+2024-01-02,NEG,Technology,500
+2024-01-02,BANK,Financial Services,2000
+2024-01-02,MFG,Industrials,1500
+2024-01-02,CASH,Technology,800

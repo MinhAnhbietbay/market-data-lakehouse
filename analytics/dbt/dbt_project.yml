@@ -1,0 +1,305 @@
+name: alpha_lakehouse_dbt
+version: "1.0.0"
+config-version: 2
+
+profile: alpha_lakehouse
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+vars:
+  env_raw: "raw"
+  env_standardize: "standardize"
+  env_curated: "curated"
+  universe_top_n: 3000
+  universe_adv_window_days: 63
+  filing_lag_days: 34
+
+seeds:
+  alpha_lakehouse_dbt:
+    curated_pit:
+      +schema: curated_pit_test
+      pit_seed_quarterly_metric:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          known_from: date
+          metric_value: double
+      pit_seed_spine:
+        +column_types:
+          date: date
+          symbol: string
+      pit_seed_price_bar:
+        +column_types:
+          symbol: string
+          trade_date: date
+          open: double
+          high: double
+          low: double
+          close: double
+          volume: double
+          known_from: date
+          source_run_date: date
+      pit_seed_stock_split:
+        +column_types:
+          symbol: string
+          split_effective_date: date
+          numerator: double
+          denominator: double
+      pit_seed_cash_dividend:
+        +column_types:
+          symbol: string
+          ex_dividend_date: date
+          dividend: double
+      pit_seed_next_trading_day:
+        +column_types:
+          calendar_date: date
+          next_trading_day: date
+      pit_seed_income_statement:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          known_from: date
+          revenue: double
+          cost_of_revenue: double
+          net_income: double
+          interest_expense: double
+          income_tax_expense: double
+          depreciation_and_amortization: double
+          net_income_deductions: double
+          weighted_average_shs_out: bigint
+          weighted_average_shs_out_dil: bigint
+      pit_seed_income_spine:
+        +column_types:
+          date: date
+          symbol: string
+      pit_seed_period_select_metric:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          known_from: date
+          metric_value: double
+      pit_seed_period_select_spine:
+        +column_types:
+          date: date
+          symbol: string
+      pit_seed_staleness_metric:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          known_from: date
+          metric_value: double
+      pit_seed_staleness_spine:
+        +column_types:
+          date: date
+          symbol: string
+      pit_seed_delisting_bar:
+        +column_types:
+          symbol: string
+          trade_date: date
+          close: double
+      pit_seed_delisting_event:
+        +column_types:
+          symbol: string
+          delisted_date: date
+      pit_seed_universe_trading_days:
+        +column_types:
+          date: date
+          is_trading_day: boolean
+      pit_seed_universe_bars:
+        +column_types:
+          symbol: string
+          date: date
+          dollar_volume: double
+      pit_seed_analyst_estimate:
+        +column_types:
+          symbol: string
+          estimate_period_end_date: date
+          known_from: date
+          eps_avg: double
+          num_analysts_eps: bigint
+      pit_seed_analyst_spine:
+        +column_types:
+          date: date
+          symbol: string
+      pit_seed_ar_listing:
+        +column_types:
+          share_class_figi: string
+          symbol: string
+          valid_from: date
+          valid_to: date
+          known_from: date
+      pit_seed_pd_security:
+        +column_types:
+          share_class_figi: string
+          symbol: string
+          cik: string
+      pit_seed_ip_legal_entity:
+        +column_types:
+          cik: string
+          sector: string
+          industry: string
+          valid_from: date
+          valid_to: date
+          known_from: date
+      pit_seed_workforce:
+        +column_types:
+          cik: string
+          period_end_date: date
+          employee_count: bigint
+          known_from: date
+      pit_seed_group_spine:
+        +column_types:
+          date: date
+          symbol: string
+      pit_seed_ttm_income:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          period: string
+          known_from: date
+          revenue: double
+          cost_of_revenue: double
+          interest_expense: double
+          income_before_tax: double
+          income_tax_expense: double
+          net_income: double
+          net_income_deductions: double
+          depreciation_and_amortization: double
+          weighted_average_shs_out: bigint
+          weighted_average_shs_out_dil: bigint
+          selling_general_and_administrative_expenses: double
+          research_and_development_expenses: double
+          other_expenses: double
+      pit_seed_ttm_balance:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          period: string
+          known_from: date
+          cash_and_cash_equivalents: double
+          short_term_investments: double
+          inventory: double
+          net_receivables: double
+          prepaids: double
+          other_current_assets: double
+          property_plant_equipment_net: double
+          goodwill: double
+          intangible_assets: double
+          long_term_investments: double
+          tax_assets: double
+          other_non_current_assets: double
+          account_payables: double
+          other_payables: double
+          accrued_expenses: double
+          short_term_debt: double
+          capital_lease_obligations_current: double
+          deferred_revenue: double
+          other_current_liabilities: double
+          long_term_debt: double
+          deferred_revenue_non_current: double
+          deferred_tax_liabilities_non_current: double
+          other_non_current_liabilities: double
+          other_liabilities: double
+          capital_lease_obligations: double
+          common_stock: double
+          preferred_stock: double
+          additional_paid_in_capital: double
+          retained_earnings: double
+          accumulated_other_comprehensive_income_loss: double
+          other_total_stockholders_equity: double
+          minority_interest: double
+          treasury_stock: double
+      pit_seed_ttm_cashflow:
+        +column_types:
+          symbol: string
+          period_end_date: date
+          period: string
+          known_from: date
+          operating_cash_flow: double
+          capital_expenditure: double
+          stock_based_compensation: double
+          depreciation_and_amortization_cash_flow: double
+      pit_seed_earnings:
+        +column_types:
+          symbol: string
+          announcement_date: date
+          known_from: date
+          eps_actual: double
+          eps_estimated: double
+          revenue_actual: double
+          revenue_estimated: double
+      pit_seed_ratios_fundamental:
+        +column_types:
+          date: date
+          symbol: string
+          short_term_debt: double
+          long_term_debt: double
+          cash_equivalents: double
+          common_equity: double
+          shares_basic: double
+          total_assets: double
+          current_assets: double
+          current_liabilities: double
+          inventories: double
+          retained_earnings: double
+          total_liabilities: double
+      pit_seed_ratios_ttm:
+        +column_types:
+          date: date
+          symbol: string
+          eps_diluted_ttm: double
+          revenue_ttm: double
+          ebitda_ttm: double
+          ebit_ttm: double
+          free_cash_flow_ttm: double
+          cfo_ttm: double
+          net_income_ttm: double
+          gross_profit_ttm: double
+          avg_common_equity: double
+          avg_total_assets: double
+          avg_invested_capital: double
+          avg_capital_employed: double
+          interest_expense_ttm: double
+          cash_only: double
+          maintenance_capex_ttm: double
+      pit_seed_ratios_price:
+        +column_types:
+          date: date
+          symbol: string
+          close: double
+      pit_seed_ratios_analyst:
+        +column_types:
+          date: date
+          symbol: string
+          eps_estimate_next_y: double
+          rating_strong_buy: double
+          rating_buy: double
+          rating_hold: double
+          rating_sell: double
+          rating_strong_sell: double
+          num_analysts_rating: double
+      pit_seed_ratios_earnings:
+        +column_types:
+          date: date
+          symbol: string
+          earnings_surprise_pct: double
+          earnings_surprise_sign: double
+          revenue_surprise_pct: double
+          standardized_unexpected_earnings: double
+      pit_seed_ratios_group:
+        +column_types:
+          date: date
+          symbol: string
+          vendor_sector: string
+          employee_count: bigint
+
+models:
+  alpha_lakehouse_dbt:
+    +materialized: table
+    +file_format: iceberg
+    curated_pit_test:
+      +schema: curated_pit_test
+

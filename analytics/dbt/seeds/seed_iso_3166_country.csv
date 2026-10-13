@@ -1,0 +1,250 @@
+country_code,country_name,region
+US,United States of America,Americas
+CA,Canada,Americas
+GB,United Kingdom,Europe
+IE,Ireland,Europe
+NL,Netherlands,Europe
+CH,Switzerland,Europe
+DE,Germany,Europe
+FR,France,Europe
+JP,Japan,Asia
+CN,China,Asia
+HK,Hong Kong,Asia
+SG,Singapore,Asia
+AU,Australia,Oceania
+IL,Israel,Asia
+BM,Bermuda,Americas
+KY,Cayman Islands,Americas
+BR,Brazil,Americas
+AF,Afghanistan,Asia
+AX,Åland Islands,Europe
+AL,Albania,Europe
+DZ,Algeria,Africa
+AS,American Samoa,Oceania
+AD,Andorra,Europe
+AO,Angola,Africa
+AI,Anguilla,Americas
+AQ,Antarctica,Antarctic
+AG,Antigua and Barbuda,Americas
+AR,Argentina,Americas
+AM,Armenia,Asia
+AW,Aruba,Americas
+AT,Austria,Europe
+AZ,Azerbaijan,Asia
+BS,Bahamas,Americas
+BH,Bahrain,Asia
+BD,Bangladesh,Asia
+BB,Barbados,Americas
+BY,Belarus,Europe
+BE,Belgium,Europe
+BZ,Belize,Americas
+BJ,Benin,Africa
+BT,Bhutan,Asia
+BO,"Bolivia, Plurinational State of",Americas
+BQ,"Bonaire, Sint Eustatius and Saba",Americas
+BA,Bosnia and Herzegovina,Europe
+BW,Botswana,Africa
+BV,Bouvet Island,Americas
+IO,British Indian Ocean Territory,Africa
+BN,Brunei Darussalam,Asia
+BG,Bulgaria,Europe
+BF,Burkina Faso,Africa
+BI,Burundi,Africa
+CV,Cabo Verde,Africa
+KH,Cambodia,Asia
+CM,Cameroon,Africa
+CF,Central African Republic,Africa
+TD,Chad,Africa
+CL,Chile,Americas
+CX,Christmas Island,Oceania
+CC,Cocos (Keeling) Islands,Oceania
+CO,Colombia,Americas
+KM,Comoros,Africa
+CG,Congo,Africa
+CD,"Congo, Democratic Republic of the",Africa
+CK,Cook Islands,Oceania
+CR,Costa Rica,Americas
+CI,Côte d’Ivoire,Africa
+HR,Croatia,Europe
+CU,Cuba,Americas
+CW,Curaçao,Americas
+CY,Cyprus,Asia
+CZ,Czechia,Europe
+DK,Denmark,Europe
+DJ,Djibouti,Africa
+DM,Dominica,Americas
+DO,Dominican Republic,Americas
+EC,Ecuador,Americas
+EG,Egypt,Africa
+SV,El Salvador,Americas
+GQ,Equatorial Guinea,Africa
+ER,Eritrea,Africa
+EE,Estonia,Europe
+SZ,Eswatini,Africa
+ET,Ethiopia,Africa
+FK,Falkland Islands (Malvinas),Americas
+FO,Faroe Islands,Europe
+FJ,Fiji,Oceania
+FI,Finland,Europe
+GF,French Guiana,Americas
+PF,French Polynesia,Oceania
+TF,French Southern Territories,Africa
+GA,Gabon,Africa
+GM,Gambia,Africa
+GE,Georgia,Asia
+GH,Ghana,Africa
+GI,Gibraltar,Europe
+GR,Greece,Europe
+GL,Greenland,Americas
+GD,Grenada,Americas
+GP,Guadeloupe,Americas
+GU,Guam,Oceania
+GT,Guatemala,Americas
+GG,Guernsey,Europe
+GN,Guinea,Africa
+GW,Guinea-Bissau,Africa
+GY,Guyana,Americas
+HT,Haiti,Americas
+HM,Heard Island and McDonald Islands,Oceania
+VA,Holy See,Europe
+HN,Honduras,Americas
+HU,Hungary,Europe
+IS,Iceland,Europe
+IN,India,Asia
+ID,Indonesia,Asia
+IR,"Iran, Islamic Republic of",Asia
+IQ,Iraq,Asia
+IM,Isle of Man,Europe
+IT,Italy,Europe
+JM,Jamaica,Americas
+JE,Jersey,Europe
+JO,Jordan,Asia
+KZ,Kazakhstan,Asia
+KE,Kenya,Africa
+KI,Kiribati,Oceania
+KP,"Korea, Democratic People’s Republic of",Asia
+KR,"Korea, Republic of",Asia
+KW,Kuwait,Asia
+KG,Kyrgyzstan,Asia
+LA,Lao People’s Democratic Republic,Asia
+LV,Latvia,Europe
+LB,Lebanon,Asia
+LS,Lesotho,Africa
+LR,Liberia,Africa
+LY,Libya,Africa
+LI,Liechtenstein,Europe
+LT,Lithuania,Europe
+LU,Luxembourg,Europe
+MO,Macao,Asia
+MG,Madagascar,Africa
+MW,Malawi,Africa
+MY,Malaysia,Asia
+MV,Maldives,Asia
+ML,Mali,Africa
+MT,Malta,Europe
+MH,Marshall Islands,Oceania
+MQ,Martinique,Americas
+MR,Mauritania,Africa
+MU,Mauritius,Africa
+YT,Mayotte,Africa
+MX,Mexico,Americas
+FM,"Micronesia, Federated States of",Oceania
+MD,"Moldova, Republic of",Europe
+MC,Monaco,Europe
+MN,Mongolia,Asia
+ME,Montenegro,Europe
+MS,Montserrat,Americas
+MA,Morocco,Africa
+MZ,Mozambique,Africa
+MM,Myanmar,Asia
+NA,Namibia,Africa
+NR,Nauru,Oceania
+NP,Nepal,Asia
+NC,New Caledonia,Oceania
+NZ,New Zealand,Oceania
+NI,Nicaragua,Americas
+NE,Niger,Africa
+NG,Nigeria,Africa
+NU,Niue,Oceania
+NF,Norfolk Island,Oceania
+MK,North Macedonia,Europe
+MP,Northern Mariana Islands,Oceania
+NO,Norway,Europe
+OM,Oman,Asia
+PK,Pakistan,Asia
+PW,Palau,Oceania
+PS,"Palestine, State of",Asia
+PA,Panama,Americas
+PG,Papua New Guinea,Oceania
+PY,Paraguay,Americas
+PE,Peru,Americas
+PH,Philippines,Asia
+PN,Pitcairn,Oceania
+PL,Poland,Europe
+PT,Portugal,Europe
+PR,Puerto Rico,Americas
+QA,Qatar,Asia
+RE,Réunion,Africa
+RO,Romania,Europe
+RU,Russian Federation,Europe
+RW,Rwanda,Africa
+BL,Saint Barthélemy,Americas
+SH,"Saint Helena, Ascension and Tristan da Cunha",Africa
+KN,Saint Kitts and Nevis,Americas
+LC,Saint Lucia,Americas
+MF,Saint Martin (French part),Americas
+PM,Saint Pierre and Miquelon,Americas
+VC,Saint Vincent and the Grenadines,Americas
+WS,Samoa,Oceania
+SM,San Marino,Europe
+ST,Sao Tome and Principe,Africa
+SA,Saudi Arabia,Asia
+SN,Senegal,Africa
+RS,Serbia,Europe
+SC,Seychelles,Africa
+SL,Sierra Leone,Africa
+SX,Sint Maarten (Dutch part),Americas
+SK,Slovakia,Europe
+SI,Slovenia,Europe
+SB,Solomon Islands,Oceania
+SO,Somalia,Africa
+ZA,South Africa,Africa
+GS,South Georgia and the South Sandwich Islands,Americas
+SS,South Sudan,Africa
+ES,Spain,Europe
+LK,Sri Lanka,Asia
+SD,Sudan,Africa
+SR,Suriname,Americas
+SJ,Svalbard and Jan Mayen,Europe
+SE,Sweden,Europe
+SY,Syrian Arab Republic,Asia
+TW,"Taiwan, Province of China",Antarctic
+TJ,Tajikistan,Asia
+TZ,"Tanzania, United Republic of",Africa
+TH,Thailand,Asia
+TL,Timor-Leste,Asia
+TG,Togo,Africa
+TK,Tokelau,Oceania
+TO,Tonga,Oceania
+TT,Trinidad and Tobago,Americas
+TN,Tunisia,Africa
+TR,Türkiye,Asia
+TM,Turkmenistan,Asia
+TC,Turks and Caicos Islands,Americas
+TV,Tuvalu,Oceania
+UG,Uganda,Africa
+UA,Ukraine,Europe
+AE,United Arab Emirates,Asia
+UM,United States Minor Outlying Islands,Oceania
+UY,Uruguay,Americas
+UZ,Uzbekistan,Asia
+VU,Vanuatu,Oceania
+VE,"Venezuela, Bolivarian Republic of",Americas
+VN,Viet Nam,Asia
+VG,Virgin Islands (British),Americas
+VI,Virgin Islands (U.S.),Americas
+WF,Wallis and Futuna,Oceania
+EH,Western Sahara,Africa
+YE,Yemen,Asia
+ZM,Zambia,Africa
+ZW,Zimbabwe,Africa

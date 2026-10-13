@@ -1,0 +1,3 @@
+date,symbol,earnings_surprise_pct,earnings_surprise_sign,revenue_surprise_pct,standardized_unexpected_earnings
+2024-01-02,VAL,0.1,1,0.05,1.5
+2024-01-02,NEG,0.1,1,0.05,1.5

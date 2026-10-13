@@ -1,0 +1,64 @@
+alpha_lakehouse:
+  target: spark
+  outputs:
+    spark:
+      type: spark
+      # method: thrift chứ không phải session. Hai lý do, cả hai đo được:
+      #   1. session không nằm trong tài liệu chính thức của dbt-spark.
+      #   2. session dựng SparkSession TRONG tiến trình dbt, nên một lần JVM
+      #      crash giết cả build: đo được 373/373 node đỏ. Với thrift, JVM nằm
+      #      ở container riêng và một lần crash chỉ hỏng node đang chạy.
+      method: thrift
+      host: spark-thriftserver
+      port: 10000
+      schema: "{{ env_var('DBT_SCHEMA', 'standardize') }}"
+      # schema Ở ĐÂY KHÔNG CÔ LẬP ĐƯỢC GÌ. Mọi model tự khai
+      # schema=var('env_standardize') trong config block của chính nó, nên
+      # generate_schema_name không bao giờ đọc tới target.schema. Muốn chạy
+      # vào schema tạm thì phải: dbt build --vars '{"env_standardize": "..."}'
+      # Dùng sai cơ chế này ngày 2026-08-21 đã ghi đè thẳng vào intermediate
+      # thật và làm mất 848 dòng.
+      threads: 4
+      # Metastore in-memory / Derby log workaround:
+      # Workaround này trước đây dùng cho method=session (SparkSession nhúng trong tiến trình dbt).
+      # Nó không áp dụng cho method=thrift vì dbt lúc này chỉ là thin JDBC client, không tạo Spark
+      # session cục bộ. Nếu session mode được dùng lại, cần khôi phục lại khối server_side_parameters
+      # với Derby in-memory (tham khảo target `dev` trong analytics/dbt/profiles.yml).
+      #
+      # NỢ KỸ THUẬT: whole-stage codegen làm SẬP JVM (SIGSEGV trong
+      # SymbolTable::do_lookup) khi chạy `dbt build` TOÀN BỘ.
+      #
+      # CHẨN ĐOÁN CŨ ĐÃ BỊ BÁC BỎ (đo lại 2026-08-20). Bản ghi trước nói phép
+      # tái hiện tối giản tất định là:
+      #   select distinct trade_date from lakehouse.standardize.std_tx_daily_price_bar
+      # và rằng câu đó chết cả qua spark-sql trực tiếp. ĐO LẠI: câu đó chạy
+      # SẠCH 6/6 lần với codegen BẬT, trả đúng 7546 dòng trong ~3,5 giây.
+      # `dbt run --select std_cm_trading_day` (model từng chết) cũng PASS.
+      # Thứ tái hiện được là `dbt build` TOÀN BỘ: 373 node trong MỘT JVM
+      # sống dài (method=session, threads 4) -> SIGSEGV, ~80 model đỏ.
+      # Tác nhân là KHỐI LƯỢNG MÃ SINH RA qua cả phiên, không phải một câu
+      # lệnh nào. SymbolTable là chỗ intern symbol/class, khớp hình dạng đó.
+      #
+      # ĐÃ THỬ, KHÔNG ĂN THUA: nâng Spark 3.5.5 -> 3.5.8 (cùng OpenJDK 17,
+      # bằng phiên bản project ~/lakehouse-oss đang chạy). Full build với
+      # codegen bật vẫn đỏ: PASS=165 ERROR=83. Với codegen tắt thì 3.5.8
+      # xanh hoàn toàn 373/373, nên bản nâng cấp tự nó vô hại.
+      #
+      # CHƯA THỬ: Java 21 (Spark 3.5 không hỗ trợ chính thức), Spark 4.x,
+      # nới metaspace/code cache, hoặc chẻ `dbt build` thành nhiều lượt để
+      # không dồn hết vào một JVM. Hướng cuối rẻ nhất và đáng thử trước.
+      #
+      # Cài đặt spark.sql.codegen.wholeStage=false nay đặt ở lệnh khởi động
+      # spark-thriftserver trong infra/docker-compose.yml (không đặt ở
+      # spark-defaults.conf và không còn ở profiles.yml): dưới thrift,
+      # profiles.yml không còn tự tạo SparkSession để đọc server_side_parameters,
+      # mà tiến trình Thrift server chịu trách nhiệm, nên cấu hình phải nằm ở
+      # lệnh khởi động của chính Thrift server. Pipelines/raw vẫn chạy
+      # với codegen bật trên cụm Spark độc lập.
+      #
+      # CÁI GIÁ: codegen tắt thì aggregation chậm hơn đáng kể. Ở 105 mã thì
+      # không thấy; ở 18k mã và std_tx_daily_price_bar 45M dòng thì sẽ thấy.
+      # Việc cần làm trước khi mở rộng universe: thử một trong các hướng
+      # CHƯA THỬ ở trên, rồi bỏ cấu hình tắt codegen ở startup command của
+      # spark-thriftserver và chạy `dbt build` TOÀN BỘ để xác nhận -- KHÔNG
+      # dùng một câu query lẻ làm phép kiểm, nó không tái hiện.

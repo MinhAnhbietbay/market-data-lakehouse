@@ -1,0 +1,53 @@
+version: 2
+
+seeds:
+  - name: seed_iso_4217_currency
+    description: >
+      Dimension tiền tệ tĩnh theo ISO 4217. Thay cho việc bootstrap từ
+      std_ip_legal_entity -- bootstrap khiến FK không thể đỏ (cùng một cột
+      ở hai đầu), tức nó không kiểm chứng được gì.
+      Seed được mở rộng đầy đủ: seed lớn hơn chỉ làm FK dễ qua hơn, không
+      bao giờ làm nó đỏ; dòng thiếu mới là thứ gây vỡ.
+    config:
+      schema: "{{ var('env_standardize') }}"
+    columns:
+      - name: currency_code
+        data_tests: [not_null, unique]
+      - name: currency_name
+        data_tests: [not_null]
+      - name: minor_unit
+        data_tests: [not_null]
+
+  - name: seed_iso_3166_country
+    description: >
+      Dimension quốc gia tĩnh theo ISO 3166-1 alpha-2. Lý do như trên.
+      Seed được mở rộng đầy đủ: seed lớn hơn chỉ làm FK dễ qua hơn, không
+      bao giờ làm nó đỏ; dòng thiếu mới là thứ gây vỡ.
+      Mô tả dùng dấu nháy đơn kiểu chữ U+2019 (’ ) để an toàn với dbt-spark INSERT VALUES.
+    config:
+      schema: "{{ var('env_standardize') }}"
+    columns:
+      - name: country_code
+        data_tests: [not_null, unique]
+      - name: country_name
+        data_tests: [not_null]
+      - name: region
+        data_tests: [not_null]
+
+  - name: seed_sic_code
+    description: >
+      Dimension phân ngành SIC tĩnh (SEC). Thay cho việc suy ngược
+      sic_description/sic_group từ std_ip_legal_entity, vốn là phụ thuộc
+      bắc cầu và làm hai bảng tham chiếu vòng tròn lẫn nhau.
+      Seed được mở rộng đầy đủ: seed lớn hơn chỉ làm FK dễ qua hơn, không
+      bao giờ làm nó đỏ; dòng thiếu mới là thứ gây vỡ.
+      Mô tả dùng dấu nháy đơn kiểu chữ U+2019 (’ ) để an toàn với dbt-spark INSERT VALUES.
+    config:
+      schema: "{{ var('env_standardize') }}"
+    columns:
+      - name: sic_code
+        data_tests: [not_null, unique]
+      - name: sic_description
+        data_tests: [not_null]
+      - name: sic_group
+        data_tests: [not_null]
