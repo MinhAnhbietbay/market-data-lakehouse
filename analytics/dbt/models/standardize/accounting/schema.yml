@@ -1,0 +1,417 @@
+version: 2
+
+models:
+  - name: std_ac_income_statement
+    description: >
+      Income Statement (ac area), period_fact -- báo cáo kết quả kinh
+      doanh một kỳ. PK (symbol, fiscal_year, period), không test unique
+      composite (không có dbt_utils, mẫu đã dùng ở slice pd/tx/gr/cm).
+      Không có bảng Fiscal Period riêng (spec D1) -- fiscal_year/period
+      denormalized trực tiếp. reported_currency/filing_date/accepted_date
+      denormalized raw. See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: cik
+        description: FK to std_ip_legal_entity.cik.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ip_legal_entity')
+              field: cik
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: reported_currency
+        description: Đơn vị tiền tệ của báo cáo. FK tới std_cm_currency (nguồn seed ISO 4217).
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}
+
+  - name: std_ac_balance_sheet_statement
+    description: >
+      Balance Sheet Statement (ac area), period_fact -- bảng cân đối kế
+      toán tại thời điểm cuối kỳ. PK (symbol, fiscal_year, period), cùng
+      quy ước với std_ac_income_statement (không test unique composite,
+      không có Fiscal Period riêng - spec D1). See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: cik
+        description: FK to std_ip_legal_entity.cik.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ip_legal_entity')
+              field: cik
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: reported_currency
+        description: Đơn vị tiền tệ của báo cáo. FK tới std_cm_currency (nguồn seed ISO 4217).
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}
+
+  - name: std_ac_cash_flow_statement
+    description: >
+      Cash Flow Statement (ac area), period_fact -- báo cáo lưu chuyển
+      tiền tệ một kỳ. PK (symbol, fiscal_year, period), cùng quy ước với
+      std_ac_income_statement. See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: cik
+        description: FK to std_ip_legal_entity.cik.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ip_legal_entity')
+              field: cik
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: reported_currency
+        description: Đơn vị tiền tệ của báo cáo. FK tới std_cm_currency (nguồn seed ISO 4217).
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}
+
+  - name: std_ac_revenue_segment_breakdown
+    description: >
+      Revenue Segment Breakdown (ac area), period_fact -- phân rã doanh
+      thu theo khu vực địa lý ở dạng long-form (mỗi dòng một phân khúc:
+      segment_name, segment_revenue). Không có FK cik (nguồn raw_fmp_revenue_
+      geographic_segmentation không có cột cik -- spec D4). Chỉ có 1 phân
+      khúc thật (americas, từ data_americas_segment) -- nguồn FMP thật trả
+      về key động theo khu vực mỗi công ty, ingestion chỉ landed cứng 1 ví
+      dụ, chưa model hoá đầy đủ (nợ N-19); dạng long không sửa nợ này, chỉ
+      đổi hình dạng lưu trữ. Nguồn landed theo period: annual
+      (configs/sources/data_sources.yaml:659), khác
+      grain quarterly của 3 bảng income/balance/cash-flow statement --
+      fiscal_year/period giữa 2 nhóm bảng KHÔNG so sánh trực tiếp được,
+      join sẽ trả về gần như rỗng nếu không biết điều này. See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, segment_name, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: reported_currency
+        description: Đơn vị tiền tệ của báo cáo. FK tới std_cm_currency (nguồn seed ISO 4217).
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        description: >
+          'filing' -- neo vào filing_date thật hoặc suy diễn từ nó. Mọi dòng của
+          bảng này CHỈ mang 'filing' (macro gọi pit_basis='filing' không điều
+          kiện) -- 'observation' không bao giờ xuất hiện, danh sách chấp nhận
+          khớp đúng miền giá trị thật thay vì rộng hơn cần thiết.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing']}
+
+  - name: std_ac_enterprise_value
+    description: >
+      Statement Line Item (ac area, enterprise-value half), grain
+      (symbol, period_end_date) -- KHÔNG có fiscal_year/period, khác mọi
+      bảng khác trong slice này (nguồn raw_fmp_enterprise_values không
+      có 2 cột đó -- spec D5). 1 trong 3 bảng vật lý tách từ concept vocab
+      "Statement Line Item" (spec D2, cùng luật D1 slice tx). Nguồn landed
+      theo period: annual (configs/sources/data_sources.yaml:620) --
+      period_end_date ở đây là ngày cuối năm tài chính (fiscal-year-end),
+      KHÔNG phải period-end quarterly như 3 bảng income/balance/cash-flow;
+      join tương lai chỉ dựa trên period_end_date sẽ tối đa khớp được
+      1-trong-4 quý. See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, period_end_date, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        description: >
+          'filing' -- neo vào filing_date thật hoặc suy diễn từ nó. Mọi dòng của
+          bảng này CHỈ mang 'filing' (macro gọi pit_basis='filing' không điều
+          kiện) -- 'observation' không bao giờ xuất hiện, danh sách chấp nhận
+          khớp đúng miền giá trị thật thay vì rộng hơn cần thiết.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing']}
+
+  - name: std_ac_owner_earnings
+    description: >
+      Statement Line Item (ac area, owner-earnings half), period_fact --
+      1 trong 3 bảng vật lý tách từ concept vocab "Statement Line Item"
+      (spec D2). Không FK cik (nguồn không có cột cik -- spec D4). See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: reported_currency
+        description: Đơn vị tiền tệ của báo cáo. FK tới std_cm_currency (nguồn seed ISO 4217).
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        description: >
+          'filing' -- neo vào filing_date thật hoặc suy diễn từ nó. Mọi dòng của
+          bảng này CHỈ mang 'filing' (macro gọi pit_basis='filing' không điều
+          kiện) -- 'observation' không bao giờ xuất hiện, danh sách chấp nhận
+          khớp đúng miền giá trị thật thay vì rộng hơn cần thiết.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing']}
+
+  - name: std_ac_ratio
+    description: >
+      Statement Line Item (ac area, ratio half), period_fact -- 1 trong
+      3 bảng vật lý tách từ concept vocab "Statement Line Item" (spec D2).
+      Chỉ mang price_to_fair_value trong phạm vi 44-concept vocab -- các
+      field ratio khác của /ratios ngoài phạm vi vocab, không thuộc slice
+      này. Không FK cik (nguồn không có cột cik -- spec D4). See
+      docs/superpowers/specs/2026-08-14-intermediate-ac-slice-design.md §4.
+      KNOWN BLOCKED: will fail to build (TrinoUserError TABLE_NOT_FOUND) until
+      raw_fmp_ratios lands in Iceberg -- source endpoint has enabled: false in
+      configs/sources/data_sources.yaml (deliberate landing-config choice, not
+      FMP-tier restriction), accepted limitation (found during live verification
+      2026-08-14). data_sources.yaml's ratios entry notes "Use as vendor
+      reconciliation; alpha curated should derive ratios from PIT statements" --
+      do not enable to "unblock" this model without revisiting that decision --
+      the project's stated intent is for the curated layer to derive ratios from
+      point-in-time statements, not consume vendor-computed ratios directly.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: reported_currency
+        description: Đơn vị tiền tệ của báo cáo. FK tới std_cm_currency (nguồn seed ISO 4217).
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        description: >
+          'observation' -- best-effort, không phải PIT thật. Backtest phải phân
+          biệt được hai loại này, nếu trộn thì không ai phát hiện.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['observation']}
+

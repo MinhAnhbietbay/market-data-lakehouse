@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: std_ar_listing
+    description: >
+      Listing dimension (ar area) -- việc một chứng khoán (share class) được
+      niêm yết trên một sàn, có hiệu lực từ ipo_date đến delisted_date. SCD2
+      shape but not a dbt snapshot: valid_from/valid_to are business dates
+      already in source data, not observation dates. cik REMOVED as of the
+      pd slice (2026-08-14) -- to reach std_ip_legal_entity.cik from a
+      symbol, join std_pd_security first (Listing -> Security -> Issuer ->
+      Legal Entity, the 3-hop chain rule N2 calls for). std_ip_legal_entity
+      is itself SCD2 (multiple rows can exist per cik) -- the join to it must
+      filter to is_current = true (or otherwise pick one version), or it
+      will silently fan out once an issuer's tracked attributes change and a
+      second SCD2 version appears.
+
+      Task 7 (2026-08-19) re-keyed this model: PK is now (share_class_figi,
+      market_code, valid_from), NOT symbol. std_pd_security's PK moved to
+      share_class_figi in Task 6, collapsing cross-listed pairs that share
+      one share class (GTWO.TO/GUYGF, OLA.TO/ORLA) to a single canonical
+      symbol -- joining Listing on std_pd_security.symbol would have
+      silently dropped the other listing of each pair. Instead this model
+      resolves symbol -> share_class_figi directly against
+      raw_openfigi_mapping via the shared resolve_share_class_figi() macro
+      (analytics/dbt/macros/), matching on symbol, its ticker-prefix (dotted
+      symbols were queried ticker-path with only the prefix), or isin (the
+      two symbols with no ticker-keyed OpenFIGI row at all, GUYGF/ORLA, only
+      resolve via the ISIN they share with their cross-listed pair). Fix
+      round 1 (2026-08-20): figi_resolved dedupes per input_id_value, not
+      per symbol, so a symbol could in principle match multiple rows there
+      (full ticker, ticker-prefix, isin) and fan out. A row_number() dedupe
+      keyed on symbol, ordered by the ISIN > CUSIP > TICKER ladder then
+      exact/prefix/isin match precedence then share_class_figi, now makes
+      "one symbol -> one row" a structural guarantee of the SQL, not a fact
+      measured against today's data.
+      market_code is the country-composite level, NOT the venue -- see the
+      model's own header comment for the US-venue-list -> 'US' rule and the
+      dot-suffix proxy used for non-US composites (tracked debt: no real
+      venue -> composite reference table exists yet). 21 of 105 symbols
+      (6 warrants + 1 preferred with no share class by design, plus 14
+      genuine OpenFIGI misses) drop out of this model because they never
+      resolve a share_class_figi -- expected, not a regression.
+    columns:
+      - name: share_class_figi
+        description: FK to std_pd_security.share_class_figi, phần đầu của PK.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_pd_security')
+              field: share_class_figi
+      - name: market_code
+        description: Composite quốc gia (US), KHÔNG phải mã sàn.
+        data_tests: [not_null]
+      - name: symbol
+        description: >
+          Thuộc tính có phiên bản, KHÔNG phải khoá. unique(symbol) cũ là bom hẹn
+          giờ: nó xanh chỉ vì /symbol-change đang 402 nên chưa symbol nào có
+          phiên bản thứ hai. Two rows can now share a share_class_figi with
+          different symbol/market_code when cross-listed (e.g. GTWO.TO/GUYGF).
+        data_tests: [not_null]
+      - name: exchange_code
+        description: >
+          Venue cụ thể do vendor cấp. Khác market_code (composite quốc gia):
+          chuyển sàn trong cùng nước đổi exchange_code mà không đổi
+          market_code, nên exchange_code là thuộc tính được fingerprint theo
+          dõi, còn market_code là một phần khoá.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_lo_exchange_venue')
+              field: exchange_code
+      - name: valid_from
+        description: = ipo_date. Phần cuối của PK.
+        data_tests: [not_null]
+      - name: is_current
+        data_tests: [not_null]
+      - name: source_run_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time', 'assumed_since_ipo']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['filing', 'observation']
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            [share_class_figi, market_code, valid_from, known_from]
+      # Fix round 1 (2026-08-20): deliberately NOT "no symbol maps to more
+      # than one share_class_figi" -- ticker reuse (delisted 2023, reissued
+      # to a different company 2025) is a legitimate case this whole PK
+      # design exists to support, and a blanket symbol-uniqueness test would
+      # go falsely red the moment FMP's /symbol-change endpoint stops
+      # returning 402. (symbol, market_code, valid_from, known_from) instead catches
+      # fan-out (the matched CTE's join producing >1 row for one symbol at
+      # the same valid_from) while leaving legitimate ticker reuse alone
+      # (different valid_from). This is NOT redundant with the PK test
+      # above: a fan-out that produces two DIFFERENT figis for one symbol at
+      # the same valid_from would still pass the PK test (each combination
+      # unique) but fails this one. Do not "simplify" this away.
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, market_code, valid_from, known_from]
+  - name: std_ar_index_membership
+    description: >
+      Index Membership (ar area) -- quan hệ (chỉ số × chứng khoán × thời gian).
+      BẢNG RỖNG (chờ nâng gói FMP). Test khoá và FK XANH VÔ ĐIỀU KIỆN và CHƯA
+      CHỨNG MINH ĐƯỢC GÌ; chúng ở đây để ngày có dữ liệu thật thì sai lệch đỏ
+      ngay lần build đầu. sub_sector/head_quarter/founded đã chuyển về
+      std_ip_legal_entity -- chúng là thuộc tính công ty, khác grain.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [index_symbol, symbol, valid_from, known_from]
+    columns:
+      - name: index_symbol
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_pd_market_index')
+              field: symbol
+      - name: symbol
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: known_from
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']

@@ -1,0 +1,550 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Physical source-aligned Iceberg tables produced by Spark.
+    schema: raw
+    tables:
+      - name: raw_fmp_profile
+        description: >
+          FMP company profile snapshots (sector/industry classification,
+          one row per symbol profile snapshot per landing run).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_income_statement
+        description: >
+          FMP quarterly income statements (one row per symbol per fiscal
+          period per landing run; period: quarter, limit: 5).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_balance_sheet
+        description: >
+          FMP quarterly balance sheets (one row per symbol per fiscal period
+          per landing run; period: quarter, limit: 5).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_cash_flow
+        description: >
+          FMP quarterly cash flow statements (one row per symbol per fiscal
+          period per landing run; period: quarter, limit: 5).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_shares_float
+        description: >
+          FMP shares float snapshots (float_shares / outstanding_shares, one
+          row per symbol per landing run) -- the only landed source of a
+          share count, since the balance-sheet endpoint reports none.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_earnings
+        description: >
+          FMP earnings announcements, pairing actual and consensus EPS /
+          revenue per event (one row per symbol per earnings date per
+          landing run).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: announcement_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_analyst_estimates
+        description: >
+          FMP analyst consensus estimates, annual periods only (period:
+          annual per the landing config), one row per symbol per estimate
+          period per landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: estimate_period_end_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_analyst_recommendations
+        description: >
+          FMP analyst rating bucket counts (strong_buy .. strong_sell) with
+          their own effective date, one row per symbol per recommendation
+          date per landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: grade_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_sec_profile
+        description: >
+          FMP SEC-sourced company profile snapshots (registrant name, SIC
+          classification, filing addresses, one row per symbol per landing run).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: cik
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_delisted_companies
+        description: >
+          FMP delisted companies reference list (symbol, exchange, IPO date,
+          delisting date; one row per delisted company).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: delisted_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_grades
+        description: >
+          FMP analyst grading actions (grading firm, previous/new grade,
+          action; one row per symbol per grading action).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: grade_date
+            data_tests: [not_null]
+          - name: grading_company
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_employee_count
+        description: >
+          FMP historical full-time employee counts by SEC filing period
+          (one row per symbol per annual filing).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: cik
+            data_tests: [not_null]
+          - name: period_end_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_index_list
+        description: >
+          FMP market index reference list (one row per market index).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: entity_name
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_ohlcv_non_split_adjusted
+        description: >
+          FMP daily OHLCV bars, UNADJUSTED raw price (endpoint docs title:
+          "Unadjusted Stock Price") -- one row per symbol per trading date
+          per landing run. Columns open/high/low/close (F12, spec
+          2026-08-18): FMP's own field names are adjOpen/adjHigh/adjLow/
+          adjClose, which misleadingly suggest an adjustment that this
+          endpoint does NOT apply; renamed at raw so downstream layers
+          don't repeat that misleading name.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: trade_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_historical_market_cap
+        description: >
+          FMP historical market capitalization snapshots (one row per
+          symbol per trading date per landing run).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: trade_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_insider_statistics
+        description: >
+          FMP quarterly insider-activity aggregates per symbol per cik (one
+          row per symbol per cik per fiscal quarter per landing run).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: cik
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: fiscal_quarter
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_insider_trading_transaction_type
+        description: >
+          FMP reference list of valid insider-transaction type codes (one
+          row per transaction type code per landing run).
+        columns:
+          - name: transaction_type
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_available_sectors
+        description: >
+          FMP reference list of valid sector names (one row per sector).
+        columns:
+          - name: sector
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_available_industries
+        description: >
+          FMP reference list of valid industry names (one row per industry).
+        columns:
+          - name: industry
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_ratings_historical
+        description: >
+          FMP historical composite security ratings, one row per symbol per
+          rating date per landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: rating_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_economic_indicators
+        description: >
+          FMP macro indicator observations from /economic-indicators, one
+          row per (series_name, observation_date) per landing run. F10a
+          (spec 2026-08-18) replaces the 3 former single-series tables
+          (stg_fmp_economic_cpi / _federal_funds / _gdp) with this one
+          multi-series table -- 12 series in runtime_sets.fmp_macro_series;
+          adding a series later is one runtime_set line, no contract change.
+        columns:
+          - name: series_name
+            data_tests: [not_null]
+          - name: observation_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_treasury_rates
+        description: >
+          FMP treasury yield curve, one row per observation date per
+          landing run, wide-format with 12 maturity columns.
+        columns:
+          - name: observation_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_revenue_geographic_segmentation
+        description: >
+          FMP revenue breakdown by geographic segment (one row per symbol
+          per fiscal period per landing run). Only one segment column
+          (data_americas_segment) is landed today -- FMP's real response
+          uses dynamic per-company segment keys, not yet modeled (spec N-19).
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_enterprise_values
+        description: >
+          FMP enterprise value inputs (stock price, share count, cash,
+          debt), one row per symbol per period end date per landing run.
+          No fiscal_year/period columns -- different grain than the other
+          accounting sources.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: period_end_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_owner_earnings
+        description: >
+          FMP owner earnings inputs (maintenance capex), one row per
+          symbol per fiscal period per landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_ratios
+        description: >
+          FMP vendor financial ratios (only price_to_fair_value is in
+          vocab scope), one row per symbol per fiscal period per landing
+          run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_financial_reports_dates
+        description: >
+          FMP 10-K filing calendar (download links for xlsx/json), one row
+          per symbol per filed report per landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: fiscal_year
+            data_tests: [not_null]
+          - name: period
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_splits
+        description: >
+          FMP stock split events (numerator/denominator/type), one row per
+          symbol per split effective date per landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: split_effective_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_dividends
+        description: >
+          FMP cash dividend events (amount, record/payment/declaration
+          dates, frequency), one row per symbol per ex-dividend date per
+          landing run.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: ex_dividend_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_mergers_acquisitions
+        description: >
+          FMP announced M&A transactions (acquirer symbol/cik, target
+          cik/symbol, transaction date, filing link), one row per
+          transaction per landing run. F7/F7b (spec 2026-08-18): source
+          endpoint switched from /mergers-acquisitions-latest (paged,
+          market-wide) to /mergers-acquisitions-search?name= (per-group,
+          universe company names) -- same 9-field response shape, contract
+          unchanged. -search currently returns HTTP 402 on this FMP tier;
+          accepted as 0 rows per R-a until plan upgrade.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: cik
+            data_tests: [not_null]
+          - name: announcement_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_price_target_consensus
+        description: >
+          FMP analyst price-target consensus (high/low/median/consensus),
+          one row per symbol per landing run date. F11/F11b (spec
+          2026-08-18): endpoint has no `date` column -- observation_date is
+          synthesized from @run_date at raw. Merged with
+          raw_fmp_price_target_summary into one concept, "Price Target
+          Consensus", at the standardize layer (std_bd_price_target_consensus)
+          via a full outer join on (symbol, observation_date) -- raw
+          stays one contract per endpoint.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: observation_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_price_target_summary
+        description: >
+          FMP analyst price-target summary (count + average target price
+          over trailing month/quarter/year/all-time windows), one row per
+          symbol per landing run date. Same @run_date-derived
+          observation_date caveat as raw_fmp_price_target_consensus (F11);
+          `publishers` field dropped (nested JSON-string array, low value,
+          F11b). Merged with raw_fmp_price_target_consensus at the
+          standardize layer -- see that source's description.
+        columns:
+          - name: symbol
+            data_tests: [not_null]
+          - name: observation_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_openfigi_mapping
+        description: >
+          OpenFIGI /mapping identifier-resolution responses (one row per
+          input identifier per matched FIGI record). `input_id_type` /
+          `input_id_value` record which identifier resolved the row (ISIN,
+          CUSIP, or TICKER) -- those paths carry measurably different
+          reliability, so both are non-nullable. `std_pd_security` reads
+          from this source.
+        columns:
+          - name: input_id_type
+            data_tests: [not_null]
+          - name: input_id_value
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_symbol_change
+        description: >
+          FMP symbol change history. BẢNG RỖNG trên gói hiện tại (402).
+        columns:
+          - name: old_symbol
+            data_tests: [not_null]
+          - name: new_symbol
+            data_tests: [not_null]
+          - name: change_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+      - name: raw_fmp_index_constituent
+        description: >
+          Thành viên chỉ số theo thời gian. BẢNG RỖNG trên gói hiện tại (402).
+        columns:
+          - name: index_symbol
+            data_tests: [not_null]
+          - name: symbol
+            data_tests: [not_null]
+          - name: change_date
+            data_tests: [not_null]
+          - name: run_date
+            data_tests: [not_null]
+          - name: landing_key
+            data_tests: [not_null]
+
+
+

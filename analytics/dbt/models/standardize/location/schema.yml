@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: std_lo_exchange_venue
+    description: >
+      Exchange Venue dimension (lo area) -- degenerate lookup, one row per
+      distinct exchange code observed across 4 raw sources. No SCD2:
+      exchange codes are static reference values. See spec
+      docs/superpowers/specs/2026-08-12-intermediate-ip-ar-slice-design.md §6.
+    # KHÔNG có known_from: đây là bảng tra cứu tĩnh (spec 2026-08-19 §4.2). Khi
+    # nào có nguồn tham chiếu thật thay cho bootstrap hiện tại thì nó chuyển sang
+    # hình dạng có phiên bản như nhóm observation.
+    columns:
+      - name: exchange_code
+        description: PK. Distinct exchange code observed in landed FMP data.
+        data_tests: [not_null, unique]
+  - name: std_lo_country
+    description: >
+      Country dimension (lo area) -- Nguồn là seed tĩnh (Task 3) chứ không
+      phải suy ngược từ std_ip_legal_entity — nhờ vậy FK trỏ tới bảng này
+      thật sự kiểm chứng được.
+      See docs/superpowers/specs/2026-08-22-intermediate-layer-closure-design.md §3.0.2 (C6).
+    # KHÔNG có known_from: đây là bảng tra cứu tĩnh (spec 2026-08-19 §4.2). Nguồn
+    # tham chiếu thật đã có (seed tĩnh), việc bảng này có cần chuyển sang hình
+    # dạng có phiên bản như nhóm observation hay không vẫn là câu hỏi mở.
+    columns:
+      - name: country_code
+        description: PK. Mã quốc gia ISO 3166-1 alpha-2 (2 chữ cái).
+        data_tests: [not_null, unique]
+      - name: country_name
+        description: Tên quốc gia.
+        data_tests: [not_null]
+      - name: region
+        description: Khu vực địa lý lớn.
+        data_tests: [not_null]

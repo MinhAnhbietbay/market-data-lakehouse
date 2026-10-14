@@ -1,0 +1,131 @@
+version: 2
+
+models:
+  - name: std_pd_security
+    description: >
+      Security dimension (pd area) -- PK share_class_figi, định danh bền vững qua
+      đổi ticker VÀ qua huỷ niêm yết. open_figi_composite KHÔNG dùng làm khoá: nó
+      bám theo chủ hiện tại của ticker (ca BBBY -> figi của Overstock/Beyond) và
+      biến mất khi chứng khoán bị huỷ niêm yết. Không SCD2 (is_etf/is_adr/
+      is_fund/security_type là phân loại gần như vĩnh viễn, không cần theo dõi
+      thay đổi). Mang cik (reference, vai trò Issuer -> std_ip_legal_entity) --
+      giải nợ N-1 của spec slice 1. isin/cusip/open_figi_composite denormalized
+      raw (chưa có bảng Identifier Scheme dùng chung, nợ N-9). Domain: 3-way full
+      outer join across raw_fmp_profile, raw_fmp_sec_profile, and
+      raw_fmp_delisted_companies (giữ symbol/cik/isin/cusip/attribute columns),
+      resolved to share_class_figi via raw_openfigi_mapping (đã dedupe
+      input_id_value -> best FIGI, ưu tiên ISIN > CUSIP > TICKER), rồi collapse
+      về một dòng mỗi share_class_figi (một share class có thể có nhiều
+      symbol/listing khi cross-listed, vd GTWO.TO/GUYGF, OLA.TO/ORLA -- đo
+      2026-08-19). Symbols không resolve được share_class_figi (21/105 đo
+      2026-08-19: 6 warrant + 1 preferred series không có hạng cổ phần theo
+      thiết kế, cộng 14 miss thật -- xem
+      analytics/dbt/tests/assert_unresolved_share_class_figi_count.sql) KHÔNG
+      có mặt ở model này -- not_null trên share_class_figi thắng, một khoá bịa
+      ra còn tệ hơn một dòng vắng mặt. std_ar_listing vẫn còn relationships
+      test trỏ vào std_pd_security.symbol (Task 7 mới rewire) -- test đó có
+      thể đỏ sau thay đổi này vì symbol domain ở đây giờ hẹp hơn (mất 21 symbol
+      không resolve + các symbol bị collapse khi cross-listed). See
+      docs/superpowers/specs/2026-08-14-intermediate-pd-slice-design.md §4.
+    columns:
+      - name: share_class_figi
+        description: PK, từ OpenFIGI.
+        data_tests: [not_null, unique]
+      - name: symbol
+        description: >
+          Một trong (có thể nhiều) symbol/listing thuộc share class này --
+          canonical symbol chosen khi cross-listed (ưu tiên symbol có dữ liệu
+          profile/sec_profile thật, tie-break alphabetically). KHÔNG unique
+          test ở model này nữa (đã chuyển sang share_class_figi).
+      - name: cik
+        description: >
+          Reference to std_ip_legal_entity.cik (vai trò Issuer). Nullable --
+          a symbol without a matching cik in either source stays NULL here.
+          std_ip_legal_entity is SCD2 (multiple rows per cik over time) --
+          any join through this FK must filter to is_current = true (or
+          otherwise pick one version), or it will silently fan out once an
+          issuer's tracked attributes change and a second SCD2 version
+          appears. NOTE (2026-08-19): this relationships test already failed
+          pre-task-6 (50 of 105 rows, measured against the original
+          symbol-keyed model) -- std_ip_legal_entity currently holds only 5
+          rows, a stale dev snapshot disjoint from this model's 105-symbol
+          OpenFIGI test domain except for the big-five overlap (AAPL etc.).
+          Out of scope for this task; still fails post-task-6 (42 of 82 rows)
+          for the same pre-existing reason, not because of the key change.
+        data_tests:
+          - relationships:
+              to: ref('std_ip_legal_entity')
+              field: cik
+      - name: security_type
+        description: >
+          PUBLIC (baby bond/preferred) bị loại ở model này -- chúng không có
+          hạng cổ phần nên không có share_class_figi.
+      - name: asset_type
+        description: Loại tài sản (e.g. Stock, ETF).
+      - name: market_sector
+        description: Phân khúc thị trường do SEC phân loại.
+      - name: price_currency
+        description: Đơn vị tiền tệ niêm yết/giao dịch.
+  - name: std_pd_market_index
+    description: >
+      Market Index dimension (pd area) -- degenerate lookup, PK entity_name
+      (KHÔNG phải symbol -- field map tách riêng: symbol thuộc concept
+      Listing, entity_name thuộc riêng Market Index, giống mẫu tách
+      Legal Entity(cik)/Listing(symbol) của slice 1). Chưa nối vào
+      std_ar_listing trong slice này (nợ N-7 -- index ticker chưa có dòng
+      Listing). See
+      docs/superpowers/specs/2026-08-14-intermediate-pd-slice-design.md §4.
+    # KHÔNG có known_from: đây là bảng tra cứu tĩnh (spec 2026-08-19 §4.2). Khi
+    # nào có nguồn tham chiếu thật thay cho bootstrap hiện tại thì nó chuyển sang
+    # hình dạng có phiên bản như nhóm observation.
+    columns:
+      - name: entity_name_key
+        description: entity_name đã chuẩn hoá (upper+trim). PK thật sự của bảng.
+        data_tests: [not_null, unique]
+      - name: entity_name
+        description: PK.
+        data_tests: [not_null, unique]
+      - name: symbol
+        description: >
+          Alternate key / index ticker (ví dụ ^GSPC), đích trỏ FK của
+          std_ar_index_membership.index_symbol.
+        data_tests: [not_null, unique]
+  - name: std_pd_share_count_observation
+    description: >
+      Share Count Observation (pd area), daily_fact -- float/outstanding
+      share counts per symbol per observation date. PK (symbol,
+      observation_date), no composite unique test (no dbt_utils package in
+      this repo -- structurally guaranteed by the row_number() dedup, same
+      precedent as std_ip_workforce_observation in slice 1). See
+      docs/superpowers/specs/2026-08-14-intermediate-pd-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, observation_date, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: observation_date
+        data_tests: [not_null]
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}

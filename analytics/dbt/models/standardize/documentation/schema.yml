@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: std_do_financial_report_document
+    description: >
+      Financial Report Document (do area), period_fact -- bản 10-K dạng
+      tệp tải về, gắn với một kỳ báo cáo. PK (symbol, fiscal_year, period),
+      denormalize trực tiếp, không có bảng Fiscal Period riêng (spec D4,
+      giữ nguyên quyết định D1 của slice ac). Không mang field SEC Filing
+      nào để denormalize -- nguồn /financial-reports-dates không có cột
+      filing_date/accepted_date (spec D1). See
+      docs/superpowers/specs/2026-08-17-intermediate-bd-do-pr-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time', 'assumed_filing_lag']
+      - name: pit_basis
+        description: >
+          'filing' -- neo vào ngày kết kỳ dẫn xuất + độ trễ nộp đo được. Mọi dòng
+          của bảng này CHỈ mang 'filing' (macro gọi pit_basis='filing' không điều
+          kiện) -- 'observation' không bao giờ xuất hiện, danh sách chấp nhận
+          khớp đúng miền giá trị thật thay vì rộng hơn cần thiết.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing']}
+

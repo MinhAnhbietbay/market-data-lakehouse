@@ -1,0 +1,405 @@
+version: 2
+
+models:
+  - name: std_ev_delisting_event
+    description: >
+      Delisting Event (ev area) -- one row per Listing that has delisted.
+      Exists specifically so std_ar_listing.valid_to has a real business
+      date to join against (rule N3: never infer listing status from a flag).
+      See spec docs/superpowers/specs/2026-08-12-intermediate-ip-ar-slice-design.md §6.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, delisted_date, known_from]
+    columns:
+      - name: symbol
+        description: >
+          FK to std_ar_listing.symbol -- NOT enforced as a hard relationships
+          test here. 21 delisting events (measured 2026-08-19) belong to
+          symbols that never resolved a share_class_figi and so never made
+          it into std_ar_listing; those events are real data we keep, not a
+          bug to delete. Guarded instead by
+          tests/assert_delisting_event_orphan_count.sql, a threshold test in
+          the same style as assert_unresolved_share_class_figi_count.sql.
+        # unique(symbol) đã BỎ 2026-08-22: đây là bom hẹn giờ y hệt cái đã gỡ ở
+        # std_ar_listing. Một ticker bị huỷ niêm yết rồi được sàn cấp lại cho công
+        # ty khác sẽ có HAI sự kiện huỷ hợp lệ. Khoá đúng là (symbol, delisted_date,
+        # known_from), khai ở mục data_tests của model.
+        data_tests:
+          - not_null
+      - name: delisted_date
+        description: event_date -- the date the Listing stopped trading.
+        data_tests: [not_null]
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        description: >
+          'observation' -- best-effort, không phải PIT thật. Backtest phải phân
+          biệt được hai loại này, nếu trộn thì không ai phát hiện.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['observation']}
+  - name: std_ev_stock_split
+    description: >
+      Stock Split (ev area), event -- chia tách/gộp cổ phiếu tại một
+      ngày hiệu lực. PK (symbol, split_effective_date), không test unique
+      composite (không có dbt_utils, mẫu đã dùng ở mọi slice trước). See
+      docs/superpowers/specs/2026-08-17-intermediate-ev-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, split_effective_date, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: split_effective_date
+        data_tests: [not_null]
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: >
+          Transaction time: ta biết được giá trị này từ ngày nào. Nguồn không có
+          ngày công bố nên đây là run_date của lần raw ĐẦU TIÊN nhìn thấy đúng
+          tập thuộc tính này. Truy vấn as-of ngày d chỉ đọc dòng known_from <= d.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        description: >
+          'observation' -- best-effort, không phải PIT thật. Backtest phải phân
+          biệt được hai loại này, nếu trộn thì không ai phát hiện.
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['observation']}
+  - name: std_ev_cash_dividend
+    description: >
+      Cash Dividend (ev area), event -- khoản chi trả tiền mặt cho người
+      nắm giữ, có ex-date, ngày chốt và ngày chi trả. PK (symbol,
+      ex_dividend_date). See
+      docs/superpowers/specs/2026-08-17-intermediate-ev-slice-design.md §4.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, ex_dividend_date, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: ex_dividend_date
+        data_tests: [not_null]
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}
+  - name: std_ev_merger_acquisition
+    description: >
+      Merger Acquisition (ev area), event -- một pháp nhân thâu tóm hoặc
+      sáp nhập với pháp nhân khác. PK 5 cột (symbol, cik, targeted_cik,
+      targeted_symbol, announcement_date) -- rộng nhất trong tầng
+      standardize tới nay. symbol/cik là bên mua (FK thật); targeted_cik/
+      targeted_symbol là bên bị mua, KHÔNG FK -- có thể là công ty tư
+      nhân ngoài universe (spec D1). accepted_date/filing_url (field SEC
+      Filing) denormalize raw trực tiếp trên bảng này, không dựng bảng
+      SEC Filing riêng (spec D2, giữ nguyên quyết định D1 slice bd/do/pr).
+      See docs/superpowers/specs/2026-08-17-intermediate-ev-slice-design.md §4.
+      KNOWN BLOCKED: will fail to build (TrinoUserError TABLE_NOT_FOUND) until
+      raw_fmp_mergers_acquisitions lands in Iceberg -- source endpoint switched
+      from /mergers-acquisitions-latest to /mergers-acquisitions-search (F7/F7b,
+      spec 2026-08-18-intermediate-identity-spine-design.md §3), which is itself
+      now confirmed HTTP 402 on the current FMP tier -- do not treat this as a
+      bug in this model's SQL. Accepted per R-a, 0 rows until plan upgrade.
+      Originally live-verified 2026-08-17 (spec N-27).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            [symbol, cik, announcement_date, targeted_party_key, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol (bên mua).
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: cik
+        description: FK to std_ip_legal_entity.cik (bên mua).
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ip_legal_entity')
+              field: cik
+      - name: targeted_cik
+        description: >
+          Bên bị mua -- KHÔNG FK, có thể là công ty tư nhân ngoài universe
+          (spec D1, N-25).
+      - name: targeted_symbol
+        description: >
+          Bên bị mua -- KHÔNG FK, có thể null khi mục tiêu là công ty tư
+          nhân (spec D1, N-25).
+      - name: targeted_party_key
+        description: >
+          Định danh bên bị mua, dùng làm một phần khoá. coalesce(targeted_cik,
+          targeted_symbol, '__UNKNOWN__') -- hai cột gốc đều nullable
+          by construction (bên bị mua có thể là công ty tư nhân ngoài
+          universe), nên khoá cũ 5 cột chứa cột nullable không có not_null nào.
+        data_tests: [not_null]
+      - name: announcement_date
+        data_tests: [not_null]
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}
+  - name: std_ev_earnings_announcement
+    description: >
+      Earnings Announcement (ev area), event -- việc công bố kết quả kinh
+      doanh một kỳ. PK (symbol, announcement_date). KHÔNG FK sang bất kỳ
+      bảng ac nào -- /earnings không có fiscal_year/period, không có khóa
+      chung để nối (spec D4); vai trò "known_from_date chuẩn nhất cho
+      Income Statement" trong vocab mang tính ý nghĩa nghiệp vụ, không
+      phải ràng buộc FK. See
+      docs/superpowers/specs/2026-08-17-intermediate-ev-slice-design.md §4.
+      UPDATE (2026-08-20, Task 10): raw_fmp_earnings now exists in Iceberg with
+      real data (625 rows measured) -- the KNOWN BLOCKED note below is stale as
+      of the staging-full-fidelity rebuild and no longer describes the current
+      state. Original note (2026-08-17, spec N-27), kept for history: will fail
+      to build (TrinoUserError TABLE_NOT_FOUND) until stg_fmp_earnings lands in
+      Iceberg -- source endpoint (/earnings) has availability: unknown in
+      configs/sources/data_sources.yaml, not a confirmed paid_required
+      restriction -- do not treat this as a bug in this model's SQL. Accepted
+      limitation, live-verified 2026-08-17 (spec N-27).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, announcement_date, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: announcement_date
+        data_tests: [not_null]
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['filing', 'observation']}
+  - name: std_ev_symbol_change_event
+    description: >
+      Symbol Change (ev area), event -- một mã giao dịch được đổi tên. Đây là
+      một trong hai nguồn đóng/mở phiên bản của std_ar_listing.
+      BẢNG RỖNG (chờ nâng gói FMP, endpoint symbol-change trả 402). Test khoá
+      và FK dưới đây xanh vô điều kiện và CHƯA CHỨNG MINH ĐƯỢC GÌ. Chúng ở
+      đây để ngày có dữ liệu thật thì grain và quan hệ đã khai sẵn, sai lệch
+      đỏ ngay lần build đầu tiên thay vì lọt vào curated.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [old_symbol, new_symbol, change_date, known_from]
+    columns:
+      - name: old_symbol
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: new_symbol
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('std_ar_listing')
+              field: symbol
+      - name: change_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['filing', 'observation']
+  - name: std_ev_ipo_event
+    description: >
+      IPO Event (ev area) -- EMPTY BY DESIGN. Cả 2 endpoint nguồn
+      (/ipos-calendar, /ipos-disclosure) đều chưa có raw contract
+      (paid_required, blocked on FMP tier upgrade). Không mang field SEC
+      Filing của /ipos-disclosure (filing_date/accepted_date/form/
+      filing_url) -- đúng mẫu 5 bảng rỗng tiền lệ chỉ mang cột của chính
+      concept. Spec §2/D5, N-24.
+    # BẢNG RỖNG (chờ nâng gói FMP). Test khoá dưới đây XANH VÔ ĐIỀU KIỆN và CHƯA
+    # CHỨNG MINH ĐƯỢC GÌ. Nó ở đây để ngày có dữ liệu thật thì grain đã được khai
+    # sẵn và sai lệch đỏ ngay lần build đầu tiên, thay vì lọt vào curated.
+    # known_from sẽ vào khoá khi bảng có dữ liệu và ta biết pit_basis của nguồn.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, effectiveness_date, known_from]
+    columns:
+      - name: symbol
+        description: FK to std_ar_listing.symbol (dự kiến, không kiểm chứng được).
+      - name: effectiveness_date
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['filing', 'observation']
+  - name: std_ev_economic_data_release
+    description: >
+      Economic Data Release (ev area) -- EMPTY BY DESIGN. Source endpoint
+      /economic-calendar has no raw contract (paid_required, blocked
+      on FMP tier upgrade). KHÔNG có cột symbol -- event vĩ mô toàn thị
+      trường, không gắn với 1 công ty cụ thể (spec D3, giống
+      std_cm_macro_observation). country_code/currency_code CÓ FK sang
+      std_lo_country/std_cm_currency (xem cột bên dưới) -- spec D5 gốc
+      (2026-08-17-intermediate-ev-slice-design.md) từng chủ trương không FK,
+      nhưng đã lỗi thời: cả hai bảng đích đều tồn tại và ổn định, FK ở đây
+      không tốn gì (bảng rỗng test luôn xanh) và sẽ được kiểm chứng thật khi
+      FMP mở endpoint. Spec §2/D5, N-24.
+    # BẢNG RỖNG (chờ nâng gói FMP). Test khoá dưới đây XANH VÔ ĐIỀU KIỆN và CHƯA
+    # CHỨNG MINH ĐƯỢC GÌ. Nó ở đây để ngày có dữ liệu thật thì grain đã được khai
+    # sẵn và sai lệch đỏ ngay lần build đầu tiên, thay vì lọt vào curated.
+    # known_from sẽ vào khoá khi bảng có dữ liệu và ta biết pit_basis của nguồn.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [event_key, country_code, release_date, known_from]
+    columns:
+      - name: release_date
+      - name: country_code
+        description: Quốc gia đăng ký. FK tới std_lo_country (nguồn seed ISO 3166).
+        data_tests:
+          - relationships:
+              to: ref('std_lo_country')
+              field: country_code
+      - name: currency_code
+        data_tests:
+          - relationships:
+              to: ref('std_cm_currency')
+              field: currency_code
+      - name: event_key
+        description: event đã chuẩn hoá (upper+trim). PK thật sự của bảng.
+      - name: event
+      - name: previous
+      - name: estimate
+      - name: actual
+      - name: impact
+      - name: unit
+      - name: source_run_date
+        description: Ngày chạy raw sinh ra phiên bản này.
+      - name: known_from
+        description: Ngày sớm nhất một backtest được phép nhìn thấy dòng này.
+        data_tests: [not_null]
+      - name: known_from_basis
+        description: >
+          Nguồn gốc của known_from Ở TỪNG DÒNG. 'business_date' = lấy từ mốc thời
+          gian nghiệp vụ (ngày SEC chấp nhận, ngày ex-dividend...). 'system_time' =
+          lấy từ run_date, tức thời điểm pipeline của ta bắt được, nên nó MANG
+          trọn độ trễ ingest. pit_basis là nhãn cấp bảng và không phân biệt được
+          hai ca này -- mọi bản đính chính (V2+) đều là 'system_time' kể cả ở bảng
+          khai pit_basis='filing'.
+        data_tests:
+          - accepted_values:
+              values: ['business_date', 'system_time']
+      - name: pit_basis
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['filing', 'observation']
