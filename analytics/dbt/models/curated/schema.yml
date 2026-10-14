@@ -1,0 +1,222 @@
+version: 2
+
+models:
+  - name: curated_dim_date
+    description: Lịch giao dịch cho engine snap biên và đếm lookback theo phiên.
+    columns:
+      - name: date
+        data_tests: [not_null, unique]
+      - name: is_trading_day
+        data_tests: [not_null]
+      - name: next_trading_day
+      - name: prev_trading_day
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_universe_membership
+    description: Rank ADV point-in-time và cờ universe membership top N theo 63 ngày giao dịch.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, symbol]
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: symbol
+        data_tests: [not_null]
+      - name: dollar_volume_rank
+        description: >
+          row_number() theo adv_63 desc, symbol asc -- KHÔNG phải rank() thuần, để đảm bảo in_top3000
+          luôn đúng chính xác N thành viên kể cả khi hoà hạng ở biên (xem spec §3, quyết định 2026-08-26).
+        data_tests: [not_null]
+      - name: in_top3000
+        data_tests: [not_null]
+      - name: adv_sessions
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_alpha_fields_daily
+    description: >
+      Bảng wide cuối cho engine -- mọi field per-symbol (giá, fundamental, analyst, group, và 72 field
+      ratios B2-B11), khoá (date, symbol). Xem configs/curated/field_sources.yaml cho định nghĩa từng cột.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, symbol]
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: symbol
+        data_tests: [not_null]
+      - name: market_cap
+        description: >
+          Vốn hoá thị trường = close * shares_basic (giá chưa điều chỉnh split; nền shares_basic =
+          weighted_average_shs_out bình quân gia quyền trong kỳ, không phải số cổ phiếu lưu hành cuối kỳ;
+          xem spec 2026-08-30 §3.4.2).
+      - name: cap
+        description: >
+          Daily market capitalization in MILLIONS (BRAIN 'cap') = market_cap / 1e6. Cùng nền shares_basic
+          như market_cap, nên thừa hưởng nợ N-q.
+      - name: vendor_sector
+        description: >
+          Phân loại ngành cấp 1 theo taxonomy của nhà cung cấp (vendor taxonomy, không phải GICS chuẩn).
+      - name: vendor_industry
+        description: >
+          Phân loại ngành cấp 2 theo taxonomy của nhà cung cấp (vendor taxonomy, không phải GICS chuẩn).
+      - name: market
+        description: >
+          Market grouping (BRAIN) -- thị trường niêm yết (US/HK/TO...), từ std_ar_listing.market_code.
+          KHÔNG liên quan tới setting neutralization='market' (setting đó nghĩa là trung hoà toàn thị trường).
+      - name: exchange
+        description: >
+          Exchange grouping (BRAIN) -- sàn niêm yết (NASDAQ/NYSE/AMEX/OTC...), từ std_ar_listing.exchange_code.
+      - name: country
+        description: >
+          Country grouping (BRAIN) -- mã quốc gia ISO của pháp nhân, từ std_ip_legal_entity.country_code,
+          bắc cầu cik->symbol qua share_class_figi.
+      - name: employee_count
+        description: >
+          Số nhân viên toàn thời gian theo hồ sơ SEC (std_ip_workforce_observation), bắc cầu cik -> symbol
+          qua share_class_figi, forward-fill tối đa 550 ngày.
+      - name: maintenance_capex
+        description: >
+          Chi phí vốn duy trì (con số vendor FMP tự tính, không dẫn xuất từ báo cáo tài chính; xem nợ N-m).
+      - name: analyst_upgrade_count
+        description: >
+          Số lần nâng hạng của giới phân tích trong ngày; 0 chứ không phải NULL khi không có sự kiện
+          trên các ngày giao dịch của symbol.
+      - name: analyst_downgrade_count
+        description: >
+          Số lần hạ hạng của giới phân tích trong ngày; 0 chứ không phải NULL khi không có sự kiện
+          trên các ngày giao dịch của symbol.
+      - name: analyst_action_count
+        description: >
+          Tổng số hành động đánh giá của giới phân tích trong ngày (bao gồm maintain và thiếu nhãn;
+          >= upgrade + downgrade); 0 chứ không phải NULL khi không có sự kiện.
+      - name: revenue_per_employee
+        description: >
+          Doanh thu trên mỗi nhân viên = revenue_ttm / employee_count.
+      - name: owner_earnings
+        description: >
+          Lợi nhuận chủ sở hữu theo định nghĩa Buffett = cfo_ttm - maintenance_capex_ttm (chỉ có giá trị
+          khi đủ 4 quý maintenance_capex).
+      - name: adv20
+        description: >
+          Trung bình khối lượng ĐÃ điều chỉnh split trên 20 ngày giao dịch (BRAIN "adv20").
+          Đòi đủ 20 quan sát non-null, nên 19 ngày đầu mỗi mã là NULL.
+      - name: split
+        description: >
+          Tỉ lệ chia tách (numerator/denominator, 2:1 -> 2.0), CHỈ có giá trị đúng ngày giao dịch
+          hiệu lực, NULL mọi ngày khác -- theo tài liệu BRAIN.
+      - name: dividend
+        description: >
+          Cổ tức tiền mặt USD/cổ phiếu tại ngày ex đã snap về phiên giao dịch, NULL mọi ngày khác.
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_macro_daily
+    description: >
+      Field vĩ mô grain (date) -- không có symbol, engine broadcast-join lúc load. Xem
+      configs/curated/field_sources.yaml cho định nghĩa từng cột.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date]
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: __fam_price
+    description: >
+      Họ giá ở lưới ngày (date, symbol). Nguồn std_tx_daily_price_bar là chuỗi
+      version bitemporal: khi vendor đính chính một thanh giá đã phát hành (FMP
+      làm tròn lại volume của 2026-09-11 từ 50.716.865 -> 50.716.900, đo
+      2026-09-15), bảng đó giữ CẢ HAI version ở cùng (symbol, trade_date) --
+      test grain của nó là (symbol, trade_date, known_from), không phải
+      (symbol, trade_date). fam_price_body phải collapse version trước khi
+      dùng; nếu không, `bars` và `cumulative` mỗi bên nhân đôi rồi join thành
+      4 dòng/ngày và lỗi chảy thẳng xuống curated_universe_membership.
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: symbol
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, symbol]
+
+  - name: __fam_ttm_periodic
+    description: >
+      18 đại lượng trung gian TTM/avg ở grain kỳ (symbol, period_end_date, known_from).
+      Nội bộ -- không cái nào là field catalog. Xem spec 2026-08-27 §4.2.
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, period_end_date, known_from]
+
+  - name: __fam_ttm
+    description: >
+      __fam_ttm_periodic hạ về lưới ngày bằng collapse_asof shape A,
+      max_staleness_days=180 khớp __fam_fundamental.
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: symbol
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, symbol]
+
+  - name: __fam_earnings_periodic
+    description: >
+      4 field earnings surprise và SUE trung gian ở grain kỳ (symbol, announcement_date, known_from).
+      Nội bộ -- không cái nào là field catalog. Xem spec 2026-08-27 §4.4.
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: announcement_date
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, announcement_date, known_from]
+
+  - name: __fam_earnings
+    description: >
+      __fam_earnings_periodic hạ về lưới ngày bằng collapse_asof shape A,
+      max_staleness_days=180 khớp __fam_fundamental.
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: symbol
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, symbol]
+
+  - name: __fam_analyst_event
+    description: >
+      Đếm sự kiện nâng/hạ hạng và tổng số action đánh giá theo ngày từ std_bd_analyst_grade_action.
+      Họ __fam_* đầu tiên không dùng collapse_asof; ngày không có sự kiện là 0 (không phải NULL).
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: symbol
+        data_tests: [not_null]
+      - name: analyst_upgrade_count
+        data_tests: [not_null]
+      - name: analyst_downgrade_count
+        data_tests: [not_null]
+      - name: analyst_action_count
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, symbol]
+
+
+
+
+

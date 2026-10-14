@@ -1,0 +1,871 @@
+version: 2
+
+models:
+  - name: curated_dim_currency
+    description: Từ điển tiền tệ. Promotion 1:1 từ std_cm_currency.
+    columns:
+      - name: currency_code
+        data_tests: [not_null, unique]
+      - name: currency_name
+      - name: minor_unit
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_country
+    description: Từ điển quốc gia. Promotion 1:1 từ std_lo_country.
+    columns:
+      - name: country_code
+        data_tests: [not_null, unique]
+      - name: country_name
+      - name: region
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_exchange
+    description: >
+      Từ điển sàn giao dịch. Nguồn chỉ có cột mã, không có tên sàn -- giới hạn của nguồn.
+    columns:
+      - name: exchange_code
+        data_tests: [not_null, unique]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_sic_code
+    description: >
+      Từ điển mã SIC. Nguồn tên là std_cm_industry_classification_system nhưng nội dung
+      thật là SIC -- dim đổi tên cho đúng thứ nó chứa.
+    columns:
+      - name: sic_code
+        data_tests: [not_null, unique]
+      - name: sic_description
+      - name: sic_group
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_market_index
+    description: >
+      Từ điển ký hiệu chỉ số thị trường. CHỈ có ký hiệu và tên, KHÔNG có mức chỉ số --
+      không dùng để đóng gap vix/sp500_index/dollar_index_dxy được.
+    columns:
+      - name: symbol
+        data_tests: [not_null, unique]
+      - name: entity_name_key
+      - name: entity_name
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_research_firm
+    description: Từ điển công ty nghiên cứu. Promotion 1:1 từ std_ip_research_firm.
+    columns:
+      - name: research_firm_name_key
+        data_tests: [not_null, unique]
+      - name: research_firm_name
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_macro_series
+    description: Từ điển tên chuỗi vĩ mô hợp lệ. Promotion 1:1 từ std_cm_macro_series.
+    columns:
+      - name: series_name
+        data_tests: [not_null, unique]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_insider_transaction_type
+    description: >
+      Từ điển mã loại giao dịch nội bộ. Fact tương ứng thuộc đợt 3b, chưa tồn tại.
+    columns:
+      - name: transaction_type
+        data_tests: [not_null, unique]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_sector
+    description: >
+      Từ điển sector hợp lệ. RỖNG tại thời điểm dựng -- endpoint /available-sectors trả
+      HTTP 402 trên gói FMP hiện tại (đo 2026-08-20).
+    meta:
+      pending_data: true
+      blocked_by: "FMP tier -- /available-sectors trả 402"
+    columns:
+      - name: sector_key
+        data_tests: [not_null, unique]
+      - name: sector
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_industry
+    description: >
+      Từ điển industry hợp lệ. RỖNG -- endpoint /available-industries trả HTTP 402
+      (đo 2026-08-20).
+    meta:
+      pending_data: true
+      blocked_by: "FMP tier -- /available-industries trả 402"
+    columns:
+      - name: industry_key
+        data_tests: [not_null, unique]
+      - name: industry
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_corporate_insider
+    description: >
+      Danh mục người nội bộ khai báo. RỖNG -- endpoint insider bị gate FMP tier.
+    meta:
+      pending_data: true
+      blocked_by: "FMP tier -- endpoint insider trả 402"
+    columns:
+      - name: reporting_cik
+        data_tests: [not_null, unique]
+      - name: person_name
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_beneficial_owner
+    description: >
+      Danh mục chủ sở hữu hưởng lợi. RỖNG -- endpoint ownership bị gate FMP tier.
+      KHOÁ YẾU: nguồn không có mã định danh, khoá là chuỗi tên tự do
+      (name_of_reporting_person). Phải đo tỉ lệ trùng/lệch chính tả trên dữ liệu thật
+      trước khi cho hạ nguồn join vào.
+    meta:
+      pending_data: true
+      blocked_by: "FMP tier -- endpoint ownership trả 402"
+    columns:
+      - name: name_of_reporting_person
+        data_tests: [not_null, unique]
+      - name: citizenship_or_place_of_organization
+      - name: type_of_reporting_person
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_security
+    description: >
+      Dim chứng khoán, Type 1 (nguồn không có cột lịch sử). Khoá share_class_figi -- khoá
+      duy nhất sống sót qua delisting và đổi mã.
+    columns:
+      - name: share_class_figi
+        data_tests: [not_null, unique]
+      - name: symbol
+        description: >
+          unique bắt buộc kể từ đợt 3b: curated_dim_financial_report_document nối
+          dim này bằng symbol TRẦN, và `relationships` chỉ kiểm tồn tại chứ KHÔNG
+          kiểm duy nhất -- nên nếu một mã bị thu hồi rồi cấp lại cho công ty khác,
+          phép nối nhân dòng chéo và không có test nào trong đợt này thấy. Đo
+          2026-08-28: 82 dòng / 82 symbol phân biệt. Đây là việc phải làm của nợ
+          N-j (spec §7); làm ngay vì nó là một dòng YAML, còn cơ chế tự nhắc của
+          N-j thì không tồn tại.
+        data_tests: [not_null, unique]
+      - name: cik
+        description: >
+          NULL ở 35/82 dòng -- ETF/fund không có mã đăng ký SEC. Đây là đặc tính của
+          nguồn, KHÔNG phải join hỏng.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_company')
+              field: cik
+      - name: isin
+      - name: cusip
+      - name: open_figi_composite
+      - name: security_type
+      - name: is_etf
+      - name: is_adr
+      - name: is_fund
+      - name: asset_type
+      - name: market_sector
+      - name: price_currency
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_currency')
+              field: currency_code
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_company
+    description: >
+      Dim công ty, Type 2 (giữ valid_from/valid_to/is_current). CẢNH BÁO: cik đơn KHÔNG
+      duy nhất -- join theo cik phải kèm is_current = true hoặc vị từ as-of, nếu không sẽ
+      nhân dòng. sector/industry là taxonomy riêng của FMP, không phải GICS.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [cik, valid_from]
+    columns:
+      - name: cik
+        data_tests: [not_null]
+      - name: company_name
+      - name: country_code
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_country')
+              field: country_code
+      - name: currency_code
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_currency')
+              field: currency_code
+      - name: sic_code
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_sic_code')
+              field: sic_code
+      - name: sector_key
+        description: >
+          KHÔNG khai relationships: từ điển đích curated_dim_sector đang 0 dòng trong khi
+          cột này có 6 giá trị non-NULL, nên relationships cứng sẽ đỏ với 6 mồ côi thật.
+          Canh bằng count guard -- xem assert_curated_dim_company_sector_orphan_count.sql.
+      - name: industry_key
+        description: Như sector_key -- canh bằng count guard, không phải relationships.
+      - name: valid_from
+        data_tests: [not_null]
+      - name: valid_to
+      - name: is_current
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_listing
+    description: >
+      Dim niêm yết, Type 2. Đo 2026-08-28: 84 dòng / 84 entity, chưa có phiên bản nào;
+      chỉ 5/84 entity có is_current = true, 79 entity còn lại là listing không hoạt động
+      chứ KHÔNG phải lịch sử đã đóng của 5 cái kia.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [share_class_figi, market_code, valid_from]
+    columns:
+      - name: share_class_figi
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: market_code
+        data_tests: [not_null]
+      - name: symbol
+      - name: exchange_code
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_exchange')
+              field: exchange_code
+      - name: valid_from
+        data_tests: [not_null]
+      - name: valid_to
+      - name: is_current
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_analyst_grade_action
+    description: >
+      Fact hành động xếp hạng của nhà phân tích, hạt (symbol, grade_date,
+      grading_company_key, known_from). 5.805 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, grade_date, grading_company_key, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: grade_date
+        data_tests: [not_null]
+      - name: grading_company_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_research_firm')
+              field: research_firm_name_key
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo grade_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_market_cap_observation
+    description: >
+      Fact quan sát vốn hoá thị trường hàng ngày từ vendor, hạt (symbol,
+      trade_date, known_from). 315 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, trade_date, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: trade_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo trade_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_security_rating
+    description: >
+      Fact xếp hạng tổng hợp của chứng khoán, hạt (symbol, rating_date,
+      known_from). 5 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, rating_date, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: rating_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo rating_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_security_rating_score
+    description: >
+      Fact điểm thành phần xếp hạng chứng khoán (dạng long), hạt (symbol,
+      rating_date, score_name, known_from). 35 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, rating_date, score_name, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: rating_date
+        data_tests: [not_null]
+      - name: score_name
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo rating_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_enterprise_value
+    description: >
+      Fact giá trị doanh nghiệp hàng năm, hạt (symbol, period_end_date,
+      known_from). 25 dòng đo 2026-08-28. Hạt fiscal-year-end, không phải quý.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, period_end_date, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo period_end_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_owner_earnings
+    description: >
+      Fact thu nhập chủ sở hữu (owner earnings), hạt (symbol, fiscal_year,
+      period, known_from). 25 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: reported_currency
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_currency')
+              field: currency_code
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo period_end_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_revenue_segment
+    description: >
+      Fact phân khúc doanh thu theo địa lý (dạng long), hạt (symbol,
+      fiscal_year, period, segment_name, known_from). 16 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, segment_name, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: segment_name
+        description: >
+          Nối curated_dim_revenue_segment. TAUTOLOGICAL TEST: dim chưng cất từ
+          chính fact này bằng select distinct, nên test relationships ở đây không
+          chứng minh gì về chất lượng dữ liệu.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_revenue_segment')
+              field: segment_name
+      - name: known_from
+        data_tests: [not_null]
+      - name: reported_currency
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_currency')
+              field: currency_code
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo period_end_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_revenue_segment
+    description: >
+      Từ điển segment_name, chưng cất từ std_ac_revenue_segment_breakdown bằng select distinct.
+      Đo 2026-08-28: 16 dòng nguồn chỉ chứa 1 giá trị phân biệt ('americas'), nên dim hiện có 1 dòng.
+      KHÔNG mang known_from / is_latest_known, MIỄN test parity (spec §2.3, §6.2).
+    columns:
+      - name: segment_name
+        data_tests:
+          - not_null
+          - unique
+      - name: loaded_at
+        data_tests:
+          - not_null
+
+  - name: curated_fact_workforce_observation
+    description: >
+      Fact quan sát quy mô nhân sự, hạt (cik, period_end_date, known_from).
+      Fact DUY NHẤT đi trục pháp nhân (cik). 136 dòng đo 2026-08-28.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [cik, period_end_date, known_from]
+    columns:
+      - name: cik
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_company')
+              field: cik
+      - name: period_end_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_dim_financial_report_document
+    description: >
+      Sổ đăng ký tài liệu báo cáo tài chính, hạt (symbol, fiscal_year, period,
+      known_from). 219 dòng đo 2026-08-28. Là DIM không phải fact (spec §1).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        description: >
+          Nối curated_dim_security bằng symbol TRẦN vì không có cột ngày để phân
+          giải as-of. Đúng có điều kiện dựa vào symbol duy nhất trong dim_security
+          (nợ N-j, spec §4.2).
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_security')
+              field: symbol
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_ratio
+    description: >
+      RỖNG tại thời điểm dựng -- /ratios trả 402 (đo 2026-08-27, đợt 2 Task 19).
+      Fact tỷ số tài chính từ vendor, hạt (symbol, fiscal_year, period, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "/ratios trả 402"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, fiscal_year, period, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: period
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: reported_currency
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_currency')
+              field: currency_code
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo period_end_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_bridge_index_membership
+    description: >
+      RỖNG tại thời điểm dựng -- /index-constituent chưa ingest (risk C-6 đợt 1).
+      Bảng cầu thành viên chỉ số thị trường (bridge), hạt (index_symbol, symbol, valid_from, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "/index-constituent chưa ingest"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [index_symbol, symbol, valid_from, known_from]
+    columns:
+      - name: index_symbol
+        description: >
+          FK trỏ vào dim_market_index.symbol, KHÔNG phải khoá chính của dim đó
+          (khoá là entity_name_key). Chỉ hợp lệ nếu symbol duy nhất trong dim --
+          đo sống 2026-08-30: 425/425 dòng duy nhất, khớp `unique` test khai trên
+          dim_market_index.symbol bên dưới (nợ N-e, spec §7 đợt 3b). Bảng bridge
+          này vẫn rỗng (pending_data), nên relationships test mới chạy vacuous
+          trên 0 dòng -- đo lại khi /index-constituent ingest xong.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_market_index')
+              field: symbol
+      - name: symbol
+        data_tests: [not_null]
+      - name: valid_from
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo valid_from. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_merger_acquisition
+    description: >
+      RỖNG tại thời điểm dựng -- raw rỗng. Fact sự kiện sáp nhập và mua lại (M&A),
+      hạt (symbol, cik, announcement_date, targeted_party_key, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "raw rỗng"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, cik, announcement_date, targeted_party_key, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: cik
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_company')
+              field: cik
+      - name: announcement_date
+        data_tests: [not_null]
+      - name: targeted_party_key
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of bên mua theo announcement_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: targeted_share_class_figi
+        description: >
+          Phân giải as-of bên bị mua theo announcement_date. CHO PHÉP NULL.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_symbol_change
+    description: >
+      RỖNG tại thời điểm dựng -- raw rỗng. Fact sự kiện đổi mã chứng khoán,
+      hạt (old_symbol, new_symbol, change_date, known_from).
+      KHÔNG có cột share_class_figi và KHÔNG có FK nào (vòng tròn định danh, nợ N-d, spec §4.2).
+    meta:
+      pending_data: true
+      blocked_by: "raw rỗng"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [old_symbol, new_symbol, change_date, known_from]
+    columns:
+      - name: old_symbol
+        data_tests: [not_null]
+      - name: new_symbol
+        data_tests: [not_null]
+      - name: change_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_insider_activity_summary
+    description: >
+      RỖNG tại thời điểm dựng -- endpoint insider bị gate FMP tier. Fact tổng hợp hoạt động
+      nội bộ theo quý, hạt (symbol, cik, fiscal_year, fiscal_quarter, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "endpoint insider bị gate FMP tier"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, cik, fiscal_year, fiscal_quarter, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: cik
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_company')
+              field: cik
+      - name: fiscal_year
+        data_tests: [not_null]
+      - name: fiscal_quarter
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Cột NULL toàn bộ vì nguồn không có cột ngày để phân giải as-of (spec §4.2). relationships
+          bỏ qua NULL nên test vẫn xanh rỗng nghĩa.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_economic_data_release
+    description: >
+      RỖNG tại thời điểm dựng -- stub -- /economic-calendar chưa có raw contract.
+      Fact công bố số liệu kinh tế vĩ mô, hạt (event_key, country_code, release_date, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "stub -- /economic-calendar chưa có raw contract"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [event_key, country_code, release_date, known_from]
+    columns:
+      - name: event_key
+        data_tests: [not_null]
+      - name: country_code
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_country')
+              field: country_code
+      - name: currency_code
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_currency')
+              field: currency_code
+      - name: release_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_ipo_event
+    description: >
+      RỖNG tại thời điểm dựng -- stub -- /ipos-calendar chưa có raw contract.
+      Fact sự kiện IPO, hạt (symbol, effectiveness_date, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "stub -- /ipos-calendar chưa có raw contract"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, effectiveness_date, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: effectiveness_date
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo effectiveness_date. DỰ KIẾN NULL GẦN NHƯ TOÀN BỘ (spec §4.2).
+          relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_beneficial_ownership_position
+    description: >
+      RỖNG tại thời điểm dựng -- stub -- /acquisition-of-beneficial-ownership chưa có raw contract.
+      Fact vị thế sở hữu hưởng lợi, hạt (symbol, cik, known_from).
+      KHÔNG khai FK sang curated_dim_beneficial_owner vì dim đó khoá bằng name_of_reporting_person
+      còn fact mang cik, không có cột chung (spec §4.6).
+    meta:
+      pending_data: true
+      blocked_by: "stub -- /acquisition-of-beneficial-ownership chưa có raw contract"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, cik, known_from]
+    columns:
+      - name: symbol
+        data_tests: [not_null]
+      - name: cik
+        data_tests: [not_null]
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo filing_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
+
+  - name: curated_fact_insider_transaction
+    description: >
+      RỖNG tại thời điểm dựng -- stub -- /insider-trading/search chưa có raw contract.
+      Fact giao dịch nội bộ, hạt (reporting_cik, symbol, transaction_date, transaction_type, known_from).
+    meta:
+      pending_data: true
+      blocked_by: "stub -- /insider-trading/search chưa có raw contract"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [reporting_cik, symbol, transaction_date, transaction_type, known_from]
+    columns:
+      - name: reporting_cik
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_corporate_insider')
+              field: reporting_cik
+      - name: symbol
+        data_tests: [not_null]
+      - name: transaction_date
+        data_tests: [not_null]
+      - name: transaction_type
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('curated_dim_insider_transaction_type')
+              field: transaction_type
+      - name: company_cik
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_company')
+              field: cik
+      - name: known_from
+        data_tests: [not_null]
+      - name: share_class_figi
+        description: >
+          Phân giải as-of theo transaction_date. CHO PHÉP NULL -- sự kiện rơi khe giữa
+          hai phiên bản niêm yết. relationships bỏ qua NULL nên không đỏ oan.
+        data_tests:
+          - relationships:
+              to: ref('curated_dim_security')
+              field: share_class_figi
+      - name: is_latest_known
+        data_tests: [not_null]
+      - name: loaded_at
+        data_tests: [not_null]
